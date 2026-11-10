@@ -5,9 +5,12 @@ config({ path: ".env.local" });
 async function main() {
   // Import dinâmico: garante que o .env.local já foi carregado
   const { db } = await import("./index");
-  const { lines, stops, lineStops, schedules } = await import("./schema");
+  const { lines, stops, lineStops, schedules, vehicles } = await import(
+    "./schema"
+  );
 
   // ATENÇÃO: limpa as tabelas. Use só em desenvolvimento.
+  await db.delete(vehicles);
   await db.delete(schedules);
   await db.delete(lineStops);
   await db.delete(stops);
@@ -47,6 +50,11 @@ async function main() {
     { lineId: linha.id, direction: 0, dayType: "weekday", departureTime: "07:30" },
     { lineId: linha.id, direction: 0, dayType: "weekday", departureTime: "08:30" },
     { lineId: linha.id, direction: 0, dayType: "saturday", departureTime: "08:00" },
+  ]);
+
+  await db.insert(vehicles).values([
+    { externalId: "SIM-001", label: "Circular 01", lineId: linha.id },
+    { externalId: "SIM-002", label: "Circular 02", lineId: linha.id },
   ]);
 
   console.log("Seed concluído.");

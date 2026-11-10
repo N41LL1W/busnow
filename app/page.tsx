@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { db } from "@/db";
 import { lines } from "@/db/schema";
+import { LiveVehicles } from "./live-vehicles";
 
 // Componente que busca no banco. Roda no servidor.
 async function LinesList() {
@@ -31,9 +32,19 @@ export default function Home() {
     <main className="min-h-screen bg-slate-900 p-8 text-white">
       <h1 className="mb-6 text-3xl font-bold">BusNow Brodowski</h1>
 
-      <Suspense fallback={<p className="text-slate-400">Carregando linhas...</p>}>
-        <LinesList />
-      </Suspense>
+      <section className="mb-8">
+        <h2 className="mb-3 text-xl font-semibold">Linhas</h2>
+        <Suspense
+          fallback={<p className="text-slate-400">Carregando linhas...</p>}
+        >
+          <LinesList />
+        </Suspense>
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-xl font-semibold">Veículos (simulação)</h2>
+        <LiveVehicles />
+      </section>
     </main>
   );
 }

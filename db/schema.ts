@@ -64,10 +64,24 @@ export const schedules = pgTable("schedules", {
   departureTime: time("departure_time").notNull(),
 });
 
+// Veículos da frota
+// externalId = o identificador do veículo no sistema da empresa de rastreio
+// (é ele que liga a posição que chega da API a uma linha do nosso sistema)
+export const vehicles = pgTable("vehicles", {
+  id: serial("id").primaryKey(),
+  externalId: text("external_id").notNull().unique(),
+  label: text("label").notNull(),
+  lineId: integer("line_id").references(() => lines.id, {
+    onDelete: "set null",
+  }),
+  active: boolean("active").notNull().default(true),
+});
+
 // Relações (permitem consultas encadeadas depois)
 export const linesRelations = relations(lines, ({ many }) => ({
   lineStops: many(lineStops),
   schedules: many(schedules),
+  vehicles: many(vehicles),
 }));
 
 export const stopsRelations = relations(stops, ({ many }) => ({
@@ -81,4 +95,8 @@ export const lineStopsRelations = relations(lineStops, ({ one }) => ({
 
 export const schedulesRelations = relations(schedules, ({ one }) => ({
   line: one(lines, { fields: [schedules.lineId], references: [lines.id] }),
+}));
+
+export const vehiclesRelations = relations(vehicles, ({ one }) => ({
+  line: one(lines, { fields: [vehicles.lineId], references: [lines.id] }),
 }));
