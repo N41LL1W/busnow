@@ -1,9 +1,39 @@
+import { Suspense } from "react";
+import { db } from "@/db";
+import { lines } from "@/db/schema";
+
+// Componente que busca no banco. Roda no servidor.
+async function LinesList() {
+  const allLines = await db.select().from(lines);
+
+  return (
+    <ul className="space-y-3">
+      {allLines.map((line) => (
+        <li
+          key={line.id}
+          className="flex items-center gap-3 rounded-lg bg-slate-800 p-4"
+        >
+          <span
+            className="rounded px-2 py-1 text-sm font-bold"
+            style={{ backgroundColor: line.color }}
+          >
+            {line.code}
+          </span>
+          <span>{line.name}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export default function Home() {
   return (
-    <main className="flex min-h-screen itenms-conter justify-center bg-sky-900">
-      <h1 className="text-3x1 font-bold text-white">
-        Welcome to My Next.js App!
-      </h1>BusNow Brodowski
+    <main className="min-h-screen bg-slate-900 p-8 text-white">
+      <h1 className="mb-6 text-3xl font-bold">BusNow Brodowski</h1>
+
+      <Suspense fallback={<p className="text-slate-400">Carregando linhas...</p>}>
+        <LinesList />
+      </Suspense>
     </main>
   );
 }
