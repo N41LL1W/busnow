@@ -1,50 +1,26 @@
 import { Suspense } from "react";
-import { db } from "@/db";
-import { lines } from "@/db/schema";
-import { LiveVehicles } from "./live-vehicles";
+import { getLinesWithStops } from "@/lib/queries";
+import { BusMap } from "./bus-map";
 
-// Componente que busca no banco. Roda no servidor.
-async function LinesList() {
-  const allLines = await db.select().from(lines);
-
-  return (
-    <ul className="space-y-3">
-      {allLines.map((line) => (
-        <li
-          key={line.id}
-          className="flex items-center gap-3 rounded-lg bg-slate-800 p-4"
-        >
-          <span
-            className="rounded px-2 py-1 text-sm font-bold"
-            style={{ backgroundColor: line.color }}
-          >
-            {line.code}
-          </span>
-          <span>{line.name}</span>
-        </li>
-      ))}
-    </ul>
-  );
+// Componente de SERVIDOR: busca no banco e entrega os dados ao mapa
+async function MapSection() {
+  const lines = await getLinesWithStops();
+  return <BusMap lines={lines} />;
 }
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-slate-900 p-8 text-white">
-      <h1 className="mb-6 text-3xl font-bold">BusNow Brodowski</h1>
+    <main className="min-h-screen bg-slate-900 p-4 text-white sm:p-8">
+      <h1 className="mb-1 text-3xl font-bold">BusNow Brodowski</h1>
+      <p className="mb-4 text-sm text-slate-400">
+        Posição dos circulares em tempo real (dados de simulação).
+      </p>
 
-      <section className="mb-8">
-        <h2 className="mb-3 text-xl font-semibold">Linhas</h2>
-        <Suspense
-          fallback={<p className="text-slate-400">Carregando linhas...</p>}
-        >
-          <LinesList />
-        </Suspense>
-      </section>
-
-      <section>
-        <h2 className="mb-3 text-xl font-semibold">Veículos (simulação)</h2>
-        <LiveVehicles />
-      </section>
+      <Suspense
+        fallback={<div className="h-[70vh] animate-pulse rounded-lg bg-slate-800" />}
+      >
+        <MapSection />
+      </Suspense>
     </main>
   );
 }
