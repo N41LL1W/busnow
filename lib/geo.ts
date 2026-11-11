@@ -65,3 +65,47 @@ export function pointAlongPath(
   const last = points[points.length - 1];
   return { point: last, heading: 0 };
 }
+
+// O contrário de pointAlongPath: dado um ponto (a posição do GPS), descobre
+// em que ponto do trajeto ele está.
+//   distanceAlong = metros percorridos desde o início do trajeto
+//   offsetMeters  = distância do ponto até a rota (quanto ele está "fora" dela)
+export function projectOnPath(
+  points: Point[],
+  p: Point
+): { distanceAlong: number; offsetMeters: number } {
+  let walked = 0;
+  let best = { distanceAlong: 0, offsetMeters: Infinity };
+
+  for (let i = 0; i < points.length - 1; i++) {
+    const a = points[i];
+    const b = points[i + 1];
+    const segment = distanceMeters(a, b);
+
+    // Em distâncias curtas, tratamos a Terra como um plano (x, y em metros),
+    // com a origem no ponto "a". Fica simples e preciso o bastante.
+    const cosLat = Math.cos(toRad(a.latitude));
+    const toXY = (q: Point) => ({
+      x: toRad(q.longitude - a.longitude) * cosLat * EARTH_RADIUS_M,
+      y: toRad(q.latitude - a.latitude) * EARTH_RADIUS_M,
+    });
+    const B = toXY(b);
+    const P = toXY(p);
+
+    // t = em que fração do segmento (0 a 1) fica o ponto mais próximo de P
+    const lengthSquared = B.x * B.x + B.y * B.y;
+    const t =
+      lengthSquared === 0
+        ? 0
+        : Math.max(0, Math.min(1, (P.x * B.x + P.y * B.y) / lengthSquared));
+
+    const offset = Math.hypot(P.x - t * B.x, P.y - t * B.y);
+
+    if (offset < best.offsetMeters) {
+      best = { distanceAlong: walked + t * segment, offsetMeters: offset };
+    }
+    walked += segment;
+  }
+
+  return best;
+}

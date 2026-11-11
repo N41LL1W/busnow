@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Map as MapLibreMap, Marker } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { formatEta, type Arrival } from "@/lib/eta";
 import type { LineWithStops } from "@/lib/queries";
 import { useVehicles } from "@/lib/use-vehicles";
 
@@ -10,6 +11,32 @@ type MapLibre = typeof import("maplibre-gl");
 
 // Atenção: o MapLibre usa [longitude, latitude] (o contrário do que falamos)
 const DEFAULT_CENTER: [number, number] = [-47.657, -20.988];
+
+// Busca a previsão da parada e escreve o resultado dentro do balão
+async function showArrivals(stopId: number, target: HTMLElement) {
+  try {
+    const res = await fetch(`/api/arrivals?stopId=${stopId}`, {
+      cache: "no-store",
+    });
+    if (!res.ok) throw new Error("Falha na resposta");
+    const data: { arrivals: Arrival[] } = await res.json();
+
+    target.replaceChildren();
+
+    if (data.arrivals.length === 0) {
+      target.textContent = "Nenhum ônibus a caminho no momento.";
+      return;
+    }
+
+    for (const arrival of data.arrivals.slice(0, 3)) {
+      const row = document.createElement("p");
+      row.textContent = `${arrival.vehicleId}: ${formatEta(arrival.etaSeconds)} (${arrival.distanceMeters} m)`;
+      target.append(row);
+    }
+  } catch {
+    target.textContent = "Não foi possível obter a previsão.";
+  }
+}
 
 export function BusMap({ lines }: { lines: LineWithStops[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -30,6 +57,11 @@ export function BusMap({ lines }: { lines: LineWithStops[] }) {
       // Import dinâmico: o MapLibre só é carregado no navegador
       const lib = await import("maplibre-gl");
       if (cancelled || !containerRef.current) return;
+
+      // NOVO: o worker embutido quebra com o Turbopack do Next, então
+      // apontamos para o arquivo copiado em public/. Precisa vir ANTES
+      // de criar o mapa.
+      lib.setWorkerUrl("/maplibre-gl-csp-worker.js");
 
       const instance = new lib.Map({
         container: containerRef.current,
@@ -89,7 +121,7 @@ export function BusMap({ lines }: { lines: LineWithStops[] }) {
           },
         });
 
-        // Paradas
+        // Paradas (com o id, para buscar a previsão)
         instance.addSource("stops", {
           type: "geojson",
           data: {
@@ -97,7 +129,7 @@ export function BusMap({ lines }: { lines: LineWithStops[] }) {
             features: lines.flatMap((line) =>
               line.stops.map((s) => ({
                 type: "Feature" as const,
-                properties: { name: s.name },
+                properties: { id: s.id, name: s.name },
                 geometry: {
                   type: "Point" as const,
                   coordinates: [s.longitude, s.latitude],
@@ -119,15 +151,31 @@ export function BusMap({ lines }: { lines: LineWithStops[] }) {
           },
         });
 
-        // Clicar numa parada mostra o nome
+        // Clicar numa parada: mostra o nome e busca a previsão de chegada
         instance.on("click", "stops", (e) => {
           const feature = e.features?.[0];
           if (!feature || feature.geometry.type !== "Point") return;
+
           const [lng, lat] = feature.geometry.coordinates;
+          const stopId = Number(feature.properties?.id);
+          const stopName = String(feature.properties?.name ?? "Parada");
+
+          // Conteúdo montado com textContent (seguro contra texto malicioso)
+          const content = document.createElement("div");
+          const title = document.createElement("p");
+          title.className = "font-semibold";
+          title.textContent = stopName;
+          const body = document.createElement("div");
+          body.className = "mt-1 text-sm";
+          body.textContent = "Buscando previsão...";
+          content.append(title, body);
+
           new lib.Popup({ offset: 10 })
             .setLngLat([lng, lat])
-            .setText(String(feature.properties?.name ?? "Parada"))
+            .setDOMContent(content)
             .addTo(instance);
+
+          showArrivals(stopId, body);
         });
         instance.on("mouseenter", "stops", () => {
           instance.getCanvas().style.cursor = "pointer";
