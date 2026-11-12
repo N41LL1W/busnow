@@ -1,0 +1,1 @@
+ALTER TABLE "line_stops" ADD COLUMN "offset_minutes" integer DEFAULT 0 NOT NULL;

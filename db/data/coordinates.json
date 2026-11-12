@@ -1,0 +1,380 @@
+{
+  "Praça Martin Moreira|": {
+    "latitude": null,
+    "longitude": null,
+    "precision": "nenhum",
+    "found": ""
+  },
+  "Rua Floriano Peixoto|652": {
+    "latitude": -20.9754173,
+    "longitude": -47.6512016,
+    "precision": "rua",
+    "found": "Rua Floriano Peixoto, Brodowski, São Paulo, Região Sudeste, 14340-063, Brasil"
+  },
+  "Rua Floriano Peixoto|425": {
+    "latitude": -20.9887415,
+    "longitude": -47.6582547,
+    "precision": "rua",
+    "found": "Rua Floriano Peixoto, Brodowski, São Paulo, Região Sudeste, 14340-063, Brasil"
+  },
+  "Rua Floriano Peixoto|186": {
+    "latitude": -20.9887415,
+    "longitude": -47.6582547,
+    "precision": "rua",
+    "found": "Rua Floriano Peixoto, Brodowski, São Paulo, Região Sudeste, 14340-063, Brasil"
+  },
+  "Rua Carlos Gomes|": {
+    "latitude": -20.9780708,
+    "longitude": -47.6536808,
+    "precision": "rua",
+    "found": "Rua Carlos Gomes, Brodowski, São Paulo, Região Sudeste, 14340-063, Brasil"
+  },
+  "Avenida das Acácias|630": {
+    "latitude": -21.0064512,
+    "longitude": -47.6650409,
+    "precision": "rua",
+    "found": "Avenida das Acácias, Brodowski, São Paulo, Região Sudeste, 14340-000, Brasil"
+  },
+  "Avenida das Acácias|970": {
+    "latitude": -21.0064512,
+    "longitude": -47.6650409,
+    "precision": "rua",
+    "found": "Avenida das Acácias, Brodowski, São Paulo, Região Sudeste, 14340-000, Brasil"
+  },
+  "Vicinal Armando Scozzafave|": {
+    "latitude": null,
+    "longitude": null,
+    "precision": "nenhum",
+    "found": ""
+  },
+  "Rua Natal Angelo Rufato|": {
+    "latitude": null,
+    "longitude": null,
+    "precision": "nenhum",
+    "found": ""
+  },
+  "Rua Irmã Santina|158": {
+    "latitude": null,
+    "longitude": null,
+    "precision": "nenhum",
+    "found": ""
+  },
+  "Avenida Rebouças|86": {
+    "latitude": -20.9859114,
+    "longitude": -47.6575354,
+    "precision": "rua",
+    "found": "Avenida Rebouças, Brodowski, São Paulo, Região Sudeste, 14340-063, Brasil"
+  },
+  "Rua Elias Barquete|80": {
+    "latitude": -20.9999722,
+    "longitude": -47.6620166,
+    "precision": "rua",
+    "found": "Rua Elias Barquete, Brodowski, São Paulo, Região Sudeste, 14340-000, Brasil"
+  },
+  "Rua Elias Barquete|233": {
+    "latitude": -20.9999722,
+    "longitude": -47.6620166,
+    "precision": "rua",
+    "found": "Rua Elias Barquete, Brodowski, São Paulo, Região Sudeste, 14340-000, Brasil"
+  },
+  "Rua Olieno Stoppa Honorato|95": {
+    "latitude": -21.0002283,
+    "longitude": -47.6604022,
+    "precision": "rua",
+    "found": "Rua Olieno Stoppa Honorato, Brodowski, São Paulo, Região Sudeste, 14340-000, Brasil"
+  },
+  "Rua Antônio Adami|222": {
+    "latitude": -20.9976741,
+    "longitude": -47.6600991,
+    "precision": "rua",
+    "found": "Rua Antônio Adami, Brodowski, São Paulo, Região Sudeste, 14340-000, Brasil"
+  },
+  "Rua Barão do Rio Branco|518": {
+    "latitude": -20.9949582,
+    "longitude": -47.6606694,
+    "precision": "rua",
+    "found": "Rua Barão do Rio Branco, Brodowski, São Paulo, Região Sudeste, 14340-000, Brasil"
+  },
+  "Rua Altino Arantes|": {
+    "latitude": -21.0014516,
+    "longitude": -47.6572524,
+    "precision": "rua",
+    "found": "Estrada para Fazenda Barrinha, Brodowski, São Paulo, Região Sudeste, 14340-000, Brasil"
+  },
+  "Rua Dr. Faustino de Castro|200": {
+    "latitude": -21.0064362,
+    "longitude": -47.659069,
+    "precision": "rua",
+    "found": "Rua Doutor Faustino de Castro, Brodowski, São Paulo, Região Sudeste, 14340-000, Brasil"
+  },
+  "Rua Alfredo Bueno|771": {
+    "latitude": -21.0064038,
+    "longitude": -47.6575781,
+    "precision": "rua",
+    "found": "Rua Alfredo Bueno, Brodowski, São Paulo, Região Sudeste, 14340-000, Brasil"
+  },
+  "Rua Maria Olímpia P. Furlam|31": {
+    "latitude": -21.0031156,
+    "longitude": -47.6542951,
+    "precision": "rua",
+    "found": "Rua Maria Olímpia P. Furlam, Brodowski, São Paulo, Região Sudeste, 14340-000, Brasil"
+  },
+  "Rua Altair Perez|51": {
+    "latitude": -21.0026549,
+    "longitude": -47.6521241,
+    "precision": "rua",
+    "found": "Rua Altair Perez, Brodowski, São Paulo, Região Sudeste, 14340-000, Brasil"
+  },
+  "Rua Reinaldo A. Toloi|270": {
+    "latitude": -21.0009553,
+    "longitude": -47.6535308,
+    "precision": "rua",
+    "found": "Rua Reinaldo A. Toloi, Brodowski, São Paulo, Região Sudeste, 14340-000, Brasil"
+  },
+  "Rua Davi Grandi|161": {
+    "latitude": -20.9973148,
+    "longitude": -47.653922,
+    "precision": "rua",
+    "found": "Rua Davi Grandi, Brodowski, São Paulo, Região Sudeste, 14340-000, Brasil"
+  },
+  "Rua Davi Grandi|480": {
+    "latitude": -20.9973148,
+    "longitude": -47.653922,
+    "precision": "rua",
+    "found": "Rua Davi Grandi, Brodowski, São Paulo, Região Sudeste, 14340-000, Brasil"
+  },
+  "Rua João Elias Saad|315": {
+    "latitude": -20.9930594,
+    "longitude": -47.6528435,
+    "precision": "rua",
+    "found": "Rua João Elias Saad, Brodowski, São Paulo, Região Sudeste, 14340-000, Brasil"
+  },
+  "Avenida Champagnat|601": {
+    "latitude": -20.9897353,
+    "longitude": -47.6550182,
+    "precision": "rua",
+    "found": "Avenida Champagnat, Brodowski, São Paulo, Região Sudeste, 14340-063, Brasil"
+  },
+  "Avenida Champagnat|333": {
+    "latitude": -20.9897353,
+    "longitude": -47.6550182,
+    "precision": "rua",
+    "found": "Avenida Champagnat, Brodowski, São Paulo, Região Sudeste, 14340-063, Brasil"
+  },
+  "Rua Vereador José Sabino|625": {
+    "latitude": -20.9875823,
+    "longitude": -47.655549,
+    "precision": "rua",
+    "found": "Rua Vereador José Sabino, Brodowski, São Paulo, Região Sudeste, 14340-063, Brasil"
+  },
+  "Rua Floriano Peixoto|1378": {
+    "latitude": -20.9887415,
+    "longitude": -47.6582547,
+    "precision": "rua",
+    "found": "Rua Floriano Peixoto, Brodowski, São Paulo, Região Sudeste, 14340-063, Brasil"
+  },
+  "Rua Floriano Peixoto|1954": {
+    "latitude": -20.9887415,
+    "longitude": -47.6582547,
+    "precision": "rua",
+    "found": "Rua Floriano Peixoto, Brodowski, São Paulo, Região Sudeste, 14340-063, Brasil"
+  },
+  "Rua José Fabri|357": {
+    "latitude": -20.9804175,
+    "longitude": -47.6520054,
+    "precision": "rua",
+    "found": "Rua José Fabri, Brodowski, São Paulo, Região Sudeste, 14340-063, Brasil"
+  },
+  "Avenida Papa João XXIII|570": {
+    "latitude": -20.9699907,
+    "longitude": -47.6449906,
+    "precision": "rua",
+    "found": "Avenida Papa João XXIII, Brodowski, São Paulo, Região Sudeste, 14340-063, Brasil"
+  },
+  "Rua Pedro Grandi|": {
+    "latitude": -20.9771068,
+    "longitude": -47.6463065,
+    "precision": "rua",
+    "found": "Rua Pedro Grandi, Brodowski, São Paulo, Região Sudeste, 14340-063, Brasil"
+  },
+  "Rua Pedro Grandi|490": {
+    "latitude": -20.9771068,
+    "longitude": -47.6463065,
+    "precision": "rua",
+    "found": "Rua Pedro Grandi, Brodowski, São Paulo, Região Sudeste, 14340-063, Brasil"
+  },
+  "Rua Delelmo Mantovani|861": {
+    "latitude": -20.9760578,
+    "longitude": -47.6437379,
+    "precision": "rua",
+    "found": "Rua Delelmo Mantovani, Brodowski, São Paulo, Região Sudeste, 14343-438, Brasil"
+  },
+  "Rua Francisca Soares|622": {
+    "latitude": -20.9797447,
+    "longitude": -47.6441176,
+    "precision": "rua",
+    "found": "Rua Francisca Soares, Brodowski, São Paulo, Região Sudeste, 14343-438, Brasil"
+  },
+  "Rua Maria F. Carvalho|4": {
+    "latitude": -20.9812174,
+    "longitude": -47.6438058,
+    "precision": "rua",
+    "found": "Rua Maria F. Carvalho, Brodowski, São Paulo, Região Sudeste, 14343-438, Brasil"
+  },
+  "Rua Antônio Francisco Pizzi|110": {
+    "latitude": -20.9827263,
+    "longitude": -47.6410059,
+    "precision": "rua",
+    "found": "Rua Antônio Francisco Pizzi, Brodowski, São Paulo, Região Sudeste, 14343-438, Brasil"
+  },
+  "Rua Antônio Francisco Pizzi|428": {
+    "latitude": -20.9827263,
+    "longitude": -47.6410059,
+    "precision": "rua",
+    "found": "Rua Antônio Francisco Pizzi, Brodowski, São Paulo, Região Sudeste, 14343-438, Brasil"
+  },
+  "Rua Antônio Francisco Pizzi|685": {
+    "latitude": -20.9827263,
+    "longitude": -47.6410059,
+    "precision": "rua",
+    "found": "Rua Antônio Francisco Pizzi, Brodowski, São Paulo, Região Sudeste, 14343-438, Brasil"
+  },
+  "Rua Cinício Teixeira Roque|814": {
+    "latitude": -20.9841871,
+    "longitude": -47.6381464,
+    "precision": "rua",
+    "found": "Rua Cinício Teixeira Roque, Brodowski, São Paulo, Região Sudeste, 14343-438, Brasil"
+  },
+  "Rua Cinício Teixeira Roque|": {
+    "latitude": -20.9841871,
+    "longitude": -47.6381464,
+    "precision": "rua",
+    "found": "Rua Cinício Teixeira Roque, Brodowski, São Paulo, Região Sudeste, 14343-438, Brasil"
+  },
+  "Rua Palmiro Martini|100": {
+    "latitude": -20.988402,
+    "longitude": -47.6396002,
+    "precision": "rua",
+    "found": "Rua Palmiro Martini, Brodowski, São Paulo, Região Sudeste, 14343-438, Brasil"
+  },
+  "Rua Élio Lascalla|274": {
+    "latitude": -20.9873168,
+    "longitude": -47.6427298,
+    "precision": "rua",
+    "found": "Rua Élio Lascalla, Brodowski, São Paulo, Região Sudeste, 14343-438, Brasil"
+  },
+  "Rua Élio Lascalla|34": {
+    "latitude": -20.9873168,
+    "longitude": -47.6427298,
+    "precision": "rua",
+    "found": "Rua Élio Lascalla, Brodowski, São Paulo, Região Sudeste, 14343-438, Brasil"
+  },
+  "Rua José Rozini|213": {
+    "latitude": -20.9914167,
+    "longitude": -47.6453372,
+    "precision": "rua",
+    "found": "Rua José Rozini, Brodowski, São Paulo, Região Sudeste, 14343-438, Brasil"
+  },
+  "Rua José Rozini|766": {
+    "latitude": -20.9914167,
+    "longitude": -47.6453372,
+    "precision": "rua",
+    "found": "Rua José Rozini, Brodowski, São Paulo, Região Sudeste, 14343-438, Brasil"
+  },
+  "Rua Bortoloto Perez|": {
+    "latitude": null,
+    "longitude": null,
+    "precision": "nenhum",
+    "found": ""
+  },
+  "Rua Arminio Monteverde|75": {
+    "latitude": -20.9845384,
+    "longitude": -47.643763,
+    "precision": "rua",
+    "found": "Rua Arminio Monteverde, Brodowski, São Paulo, Região Sudeste, 14343-438, Brasil"
+  },
+  "Rua Oswaldo Cruz|160": {
+    "latitude": -20.9823946,
+    "longitude": -47.6477354,
+    "precision": "rua",
+    "found": "Rua Oswaldo Cruz, Brodowski, São Paulo, Região Sudeste, 14343-438, Brasil"
+  },
+  "Rua Oswaldo Cruz|142": {
+    "latitude": -20.9823946,
+    "longitude": -47.6477354,
+    "precision": "rua",
+    "found": "Rua Oswaldo Cruz, Brodowski, São Paulo, Região Sudeste, 14343-438, Brasil"
+  },
+  "Rua Olavo Bilac|20": {
+    "latitude": -20.9818917,
+    "longitude": -47.6490266,
+    "precision": "rua",
+    "found": "Rua Olavo Bilac, Brodowski, São Paulo, Região Sudeste, 14340-063, Brasil"
+  },
+  "Rua Vereador José Sabino|1.417": {
+    "latitude": -20.9875823,
+    "longitude": -47.655549,
+    "precision": "rua",
+    "found": "Rua Vereador José Sabino, Brodowski, São Paulo, Região Sudeste, 14340-063, Brasil"
+  },
+  "Rua Benjamin Constant|244": {
+    "latitude": -20.986008,
+    "longitude": -47.6552692,
+    "precision": "rua",
+    "found": "Rua Benjamin Constant, Brodowski, São Paulo, Região Sudeste, 14340-063, Brasil"
+  },
+  "Rua 15 de Novembro|73": {
+    "latitude": -20.9843333,
+    "longitude": -47.6563213,
+    "precision": "rua",
+    "found": "Rua 15 de Novembro, Brodowski, São Paulo, Região Sudeste, 14340-063, Brasil"
+  },
+  "Rua Dário de Oliveira|261": {
+    "latitude": -20.9837845,
+    "longitude": -47.6600559,
+    "precision": "rua",
+    "found": "Rua Dário de Oliveira, Brodowski, São Paulo, Região Sudeste, 14340-063, Brasil"
+  },
+  "Rua Antônio Alves Ferreira|18": {
+    "latitude": -20.9766235,
+    "longitude": -47.6577757,
+    "precision": "rua",
+    "found": "Rua Antônio Alves Ferreira, Brodowski, São Paulo, Região Sudeste, 14340-063, Brasil"
+  },
+  "Rua Antônio Alves Ferreira|821": {
+    "latitude": -20.9766235,
+    "longitude": -47.6577757,
+    "precision": "rua",
+    "found": "Rua Antônio Alves Ferreira, Brodowski, São Paulo, Região Sudeste, 14340-063, Brasil"
+  },
+  "Estrada Vicinal Jardinópolis|9": {
+    "latitude": -20.9824892,
+    "longitude": -47.689871,
+    "precision": "rua",
+    "found": "Estrada Vicinal Jardinópolis, Brodowski, São Paulo, Região Sudeste, 14340-063, Brasil"
+  },
+  "Rua João Gonçalves Sardinha|501": {
+    "latitude": -20.9850979,
+    "longitude": -47.6706329,
+    "precision": "rua",
+    "found": "Rua João Gonçalves Sardinha, Brodowski, São Paulo, Região Sudeste, 14340-063, Brasil"
+  },
+  "Rua João Gonçalves Sardinha|211": {
+    "latitude": -20.9850979,
+    "longitude": -47.6706329,
+    "precision": "rua",
+    "found": "Rua João Gonçalves Sardinha, Brodowski, São Paulo, Região Sudeste, 14340-063, Brasil"
+  },
+  "Rua Capitão João Pereira Ramos|499": {
+    "latitude": -20.9857423,
+    "longitude": -47.6609325,
+    "precision": "rua",
+    "found": "Rua Capitão João Pereira Ramos, Brodowski, São Paulo, Região Sudeste, 14340-063, Brasil"
+  },
+  "Rua Capitão João Pereira Ramos|81": {
+    "latitude": -20.9857423,
+    "longitude": -47.6609325,
+    "precision": "rua",
+    "found": "Rua Capitão João Pereira Ramos, Brodowski, São Paulo, Região Sudeste, 14340-063, Brasil"
+  }
+}

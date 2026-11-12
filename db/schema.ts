@@ -35,6 +35,8 @@ export const stops = pgTable("stops", {
 });
 
 // Ordem das paradas em cada linha e sentido
+// offsetMinutes = minutos depois da saída do terminal em que o ônibus
+// passa neste ponto (horário do ponto = saída + offsetMinutes)
 export const lineStops = pgTable(
   "line_stops",
   {
@@ -47,6 +49,7 @@ export const lineStops = pgTable(
       .references(() => stops.id, { onDelete: "cascade" }),
     direction: integer("direction").notNull().default(0), // 0 = ida, 1 = volta
     position: integer("position").notNull(), // 1, 2, 3...
+    offsetMinutes: integer("offset_minutes").notNull().default(0),
   },
   (t) => [
     uniqueIndex("line_stops_unique").on(t.lineId, t.direction, t.position),

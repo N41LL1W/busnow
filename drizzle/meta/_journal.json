@@ -15,6 +15,13 @@
       "when": 1794336271534,
       "tag": "0001_clumsy_karen_page",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794487947445,
+      "tag": "0002_tough_tarantula",
+      "breakpoints": true
     }
   ]
 }

@@ -1,8 +1,28 @@
 import { config } from "dotenv";
+import { lines as lineData, stopKey } from "./data/lines";
+import { resolveStops } from "./data/positions";
 
 config({ path: ".env.local" });
 
 async function main() {
+  // Posição de cada ponto: ajuste manual > coordenada achada pelo geocode
+  const resolved = new Map(
+    resolveStops().map((stop) => [stop.key, stop] as const)
+  );
+
+  // 1. Confere se TODO ponto tem posição ANTES de mexer no banco
+  const missing = [...resolved.values()].filter(
+    (stop) => stop.latitude === null || stop.longitude === null
+  );
+  if (missing.length > 0) {
+    console.error(`Faltam posições para ${missing.length} ponto(s):`);
+    missing.forEach((stop) => console.error(`  - ${stop.name}`));
+    console.error(
+      "\nAbra http://localhost:3000/dev/pontos (com `npm run dev` rodando) e arraste esses pontos para o lugar certo."
+    );
+    process.exit(1);
+  }
+
   // Import dinâmico: garante que o .env.local já foi carregado
   const { db } = await import("./index");
   const { lines, stops, lineStops, schedules, vehicles } = await import(
@@ -16,48 +36,80 @@ async function main() {
   await db.delete(stops);
   await db.delete(lines);
 
-  const [linha] = await db
-    .insert(lines)
-    .values({
-      code: "C1",
-      name: "Circular Centro - Bairros",
-      color: "#2563eb",
-    })
-    .returning();
+  // Paradas já criadas (o terminal é compartilhado entre as linhas)
+  const stopIds = new Map<string, number>();
 
-  // Coordenadas FICTÍCIAS, apenas para teste. Troque pelas reais depois.
-  const paradas = await db
-    .insert(stops)
-    .values([
-      { name: "Terminal (exemplo)", latitude: -20.9876, longitude: -47.6567 },
-      { name: "Praça central (exemplo)", latitude: -20.989, longitude: -47.655 },
-      { name: "Escola (exemplo)", latitude: -20.991, longitude: -47.653 },
-      { name: "Posto de saúde (exemplo)", latitude: -20.9935, longitude: -47.651 },
-    ])
-    .returning();
+  for (const [lineIndex, line] of lineData.entries()) {
+    const [createdLine] = await db
+      .insert(lines)
+      .values({ code: line.code, name: line.name, color: line.color })
+      .returning();
 
-  await db.insert(lineStops).values(
-    paradas.map((p, i) => ({
-      lineId: linha.id,
-      stopId: p.id,
-      direction: 0,
-      position: i + 1,
-    }))
-  );
+    // 2. Cria só as paradas que ainda não existem
+    const newStops = line.stops.filter((stop) => !stopIds.has(stopKey(stop)));
 
-  await db.insert(schedules).values([
-    { lineId: linha.id, direction: 0, dayType: "weekday", departureTime: "06:30" },
-    { lineId: linha.id, direction: 0, dayType: "weekday", departureTime: "07:30" },
-    { lineId: linha.id, direction: 0, dayType: "weekday", departureTime: "08:30" },
-    { lineId: linha.id, direction: 0, dayType: "saturday", departureTime: "08:00" },
-  ]);
+    if (newStops.length > 0) {
+      const created = await db
+        .insert(stops)
+        .values(
+          newStops.map((stop) => {
+            const point = resolved.get(stopKey(stop))!;
+            return {
+              name: point.name,
+              latitude: point.latitude as number,
+              longitude: point.longitude as number,
+            };
+          })
+        )
+        .returning();
 
-  await db.insert(vehicles).values([
-    { externalId: "SIM-001", label: "Circular 01", lineId: linha.id },
-    { externalId: "SIM-002", label: "Circular 02", lineId: linha.id },
-  ]);
+      newStops.forEach((stop, i) => stopIds.set(stopKey(stop), created[i].id));
+    }
 
+    // 3. Liga as paradas à linha, na ordem, com os minutos de cada uma
+    await db.insert(lineStops).values(
+      line.stops.map((stop, i) => ({
+        lineId: createdLine.id,
+        stopId: stopIds.get(stopKey(stop)) as number,
+        direction: 0,
+        position: i + 1,
+        offsetMinutes: stop.offset,
+      }))
+    );
+
+    // 4. Horários de saída do terminal
+    await db.insert(schedules).values([
+      ...line.weekdayDepartures.map((time) => ({
+        lineId: createdLine.id,
+        direction: 0,
+        dayType: "weekday" as const,
+        departureTime: time,
+      })),
+      ...line.saturdayDepartures.map((time) => ({
+        lineId: createdLine.id,
+        direction: 0,
+        dayType: "saturday" as const,
+        departureTime: time,
+      })),
+    ]);
+
+    // 5. Um ônibus simulado por linha (cada linha tem um só veículo)
+    await db.insert(vehicles).values({
+      externalId: `SIM-${String(lineIndex + 1).padStart(3, "0")}`,
+      label: `Ônibus ${line.code}`,
+      lineId: createdLine.id,
+    });
+
+    console.log(`Linha ${line.code}: ${line.stops.length} pontos.`);
+  }
+
+  const pending = [...resolved.values()].filter(
+    (stop) => stop.source !== "manual"
+  ).length;
   console.log("Seed concluído.");
+  console.log(
+    `${pending} de ${resolved.size} pontos ainda não foram conferidos em /dev/pontos.`
+  );
 }
 
 main().catch((err) => {

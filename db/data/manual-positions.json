@@ -1,0 +1,262 @@
+{
+  "Praça Martin Moreira||Rodoviária": {
+    "latitude": -20.989294338629662,
+    "longitude": -47.659742832183845
+  },
+  "Rua Floriano Peixoto|652|Salgadaria Maretta": {
+    "latitude": -20.99180356341885,
+    "longitude": -47.659968137741096
+  },
+  "Rua Floriano Peixoto|425|Posto CSIII": {
+    "latitude": -20.99420757157117,
+    "longitude": -47.66119122505189
+  },
+  "Rua Floriano Peixoto|186|Delegacia": {
+    "latitude": -20.996260964550075,
+    "longitude": -47.6623284816742
+  },
+  "Rua Carlos Gomes||Chácara Boleta": {
+    "latitude": -20.997998814102257,
+    "longitude": -47.664479613304145
+  },
+  "Rua Carlos Gomes||Entrada Quebec": {
+    "latitude": -21.000567989776105,
+    "longitude": -47.6658582687378
+  },
+  "Avenida das Acácias|630|Academia Bom Jardim": {
+    "latitude": -21.005330613663737,
+    "longitude": -47.66485512256623
+  },
+  "Avenida das Acácias|970|Entrada Pesqueiro": {
+    "latitude": -21.008781042219095,
+    "longitude": -47.665997743606574
+  },
+  "Vicinal Armando Scozzafave||Condominio Amestista": {
+    "latitude": -21.010098093324494,
+    "longitude": -47.66646444797516
+  },
+  "Rua Natal Angelo Rufato||Atrás Mult Beef": {
+    "latitude": -21.00591153320098,
+    "longitude": -47.663208246231086
+  },
+  "Rua Irmã Santina|158|Caixa D'Água Miranda": {
+    "latitude": -21.00778949036922,
+    "longitude": -47.663326263427734
+  },
+  "Vicinal Armando Scozzafave||Paulinho Choperia": {
+    "latitude": -21.005726240145936,
+    "longitude": -47.66421139240265
+  },
+  "Avenida Rebouças|86|Supermercado Nori": {
+    "latitude": -21.00104375819618,
+    "longitude": -47.66561686992645
+  },
+  "Rua Elias Barquete|80|Sobradinho": {
+    "latitude": -20.99957137522263,
+    "longitude": -47.664243578910835
+  },
+  "Rua Elias Barquete|233|Hospitalzinho": {
+    "latitude": -20.99993196015095,
+    "longitude": -47.66245722770691
+  },
+  "Rua Olieno Stoppa Honorato|95|Fisioterapia": {
+    "latitude": -20.999916935796325,
+    "longitude": -47.660043239593506
+  },
+  "Rua Antônio Adami|222|Cohab I": {
+    "latitude": -20.998023855014228,
+    "longitude": -47.66010761260987
+  },
+  "Rua Barão do Rio Branco|518|Supermercados 3J": {
+    "latitude": -20.99662155747498,
+    "longitude": -47.657468318939216
+  },
+  "Rua Altino Arantes||WR Lava Rápido": {
+    "latitude": -21.001629702482074,
+    "longitude": -47.65734493732453
+  },
+  "Rua Dr. Faustino de Castro|200|Gota Dourada": {
+    "latitude": -21.00642233989092,
+    "longitude": -47.65950679779053
+  },
+  "Rua Alfredo Bueno|771|Fabrica Milk": {
+    "latitude": -21.006327189757666,
+    "longitude": -47.65744149684907
+  },
+  "Rua Maria Olímpia P. Furlam|31|Bar do Fernando": {
+    "latitude": -21.00298187282368,
+    "longitude": -47.65548348426819
+  },
+  "Rua Altair Perez|51|Jardim Primavera": {
+    "latitude": -21.00259625512312,
+    "longitude": -47.652248740196235
+  },
+  "Rua Reinaldo A. Toloi|270|Palmeira": {
+    "latitude": -21.00092857229677,
+    "longitude": -47.65335381031037
+  },
+  "Rua Davi Grandi|161|Abacateiro": {
+    "latitude": -20.99916070799332,
+    "longitude": -47.65487730503083
+  },
+  "Rua Davi Grandi|480|Padaria Diniz": {
+    "latitude": -20.995820238681254,
+    "longitude": -47.65324115753174
+  },
+  "Rua João Elias Saad|315|Escola Elza Leite": {
+    "latitude": -20.994227604809826,
+    "longitude": -47.65309631824494
+  },
+  "Avenida Champagnat|601|Fábrica Costura Frata": {
+    "latitude": -20.99037115682732,
+    "longitude": -47.65333235263825
+  },
+  "Avenida Champagnat|333|Bar do Cowboy": {
+    "latitude": -20.989399516563218,
+    "longitude": -47.65560150146485
+  },
+  "Rua Vereador José Sabino|625|Nosso Supermercado": {
+    "latitude": -20.990230920478528,
+    "longitude": -47.656781673431404
+  },
+  "Rua Floriano Peixoto|1378|Escola Tiradentes": {
+    "latitude": -20.986584729188824,
+    "longitude": -47.65717327594758
+  },
+  "Rua Floriano Peixoto|1954|Lar da Fraternidade": {
+    "latitude": -20.981721332768032,
+    "longitude": -47.65470564365388
+  },
+  "Rua José Fabri|357|Lions": {
+    "latitude": -20.980709566141137,
+    "longitude": -47.65106320381165
+  },
+  "Avenida Papa João XXIII|570|Ricardo Cabelereiro": {
+    "latitude": -20.981370721346345,
+    "longitude": -47.64975428581238
+  },
+  "Rua Pedro Grandi||Lava Rápido (City)": {
+    "latitude": -20.977328613110704,
+    "longitude": -47.64573097229004
+  },
+  "Rua Pedro Grandi|490|Árvore Paineira": {
+    "latitude": -20.97720339115902,
+    "longitude": -47.64408946037293
+  },
+  "Rua Delelmo Mantovani|861|Coqueirinho": {
+    "latitude": -20.978575818022335,
+    "longitude": -47.63982474803925
+  },
+  "Rua Francisca Soares|622|Barracao vermelho": {
+    "latitude": -20.979181885727076,
+    "longitude": -47.641777396202095
+  },
+  "Rua Maria F. Carvalho|4|Esquina Chácara": {
+    "latitude": -20.98154602716004,
+    "longitude": -47.64385879039765
+  },
+  "Rua Antônio Francisco Pizzi|110|Campo Pernambuco": {
+    "latitude": -20.98199681259355,
+    "longitude": -47.64265179634095
+  },
+  "Rua Antônio Francisco Pizzi|428|Igreja Madureira": {
+    "latitude": -20.98245761407533,
+    "longitude": -47.64146625995637
+  },
+  "Rua Antônio Francisco Pizzi|685|Bar do Japão": {
+    "latitude": -20.98332912603523,
+    "longitude": -47.63922393321992
+  },
+  "Rua Cinício Teixeira Roque|814|Paulinho Motos": {
+    "latitude": -20.98381496670228,
+    "longitude": -47.63809740543366
+  },
+  "Rua Cinício Teixeira Roque||Campo de futebol": {
+    "latitude": -20.985588021298014,
+    "longitude": -47.6388430595398
+  },
+  "Rua Palmiro Martini|100|Praça do CDHU": {
+    "latitude": -20.989429567387763,
+    "longitude": -47.639620900154114
+  },
+  "Rua Élio Lascalla|274|Creas": {
+    "latitude": -20.987826848306447,
+    "longitude": -47.641734480857856
+  },
+  "Rua Élio Lascalla|34|Pizzaria Amarildo": {
+    "latitude": -20.986795088798214,
+    "longitude": -47.64429867267609
+  },
+  "Rua José Rozini|213|Caixa D'Água Fortaleza": {
+    "latitude": -20.991853647316784,
+    "longitude": -47.644743919372566
+  },
+  "Rua José Rozini|766|Mini mercado Fortaleza": {
+    "latitude": -20.991042286101862,
+    "longitude": -47.64541983604432
+  },
+  "Rua Bortoloto Perez||Banquinho de madeira": {
+    "latitude": -20.99110238708378,
+    "longitude": -47.64314532279969
+  },
+  "Rua Arminio Monteverde|75|Posto de saúde Mendonça": {
+    "latitude": -20.98407541671859,
+    "longitude": -47.64369249343873
+  },
+  "Rua Oswaldo Cruz|160|Depósito Bebidas Caetano": {
+    "latitude": -20.98314380495212,
+    "longitude": -47.64621913433076
+  },
+  "Rua Oswaldo Cruz|142|UBS DR Luiz Brisoti": {
+    "latitude": -20.98198679515425,
+    "longitude": -47.648354172706604
+  },
+  "Rua Olavo Bilac|20|Casa de Tintas": {
+    "latitude": -20.984045364816804,
+    "longitude": -47.650092244148254
+  },
+  "Rua Vereador José Sabino|1.417|Escola JASP": {
+    "latitude": -20.98412550320812,
+    "longitude": -47.65284419059754
+  },
+  "Rua Benjamin Constant|244|André Supermercados": {
+    "latitude": -20.986199069135488,
+    "longitude": -47.65464127063751
+  },
+  "Rua 15 de Novembro|73|APAE": {
+    "latitude": -20.98390512252854,
+    "longitude": -47.657527327537544
+  },
+  "Rua Dário de Oliveira|261|Martinico": {
+    "latitude": -20.98419562426527,
+    "longitude": -47.659345865249634
+  },
+  "Rua Antônio Alves Ferreira|18|Fábrica de amendoim": {
+    "latitude": -20.982933440200817,
+    "longitude": -47.66208708286286
+  },
+  "Rua Antônio Alves Ferreira|821|Bar do Branco": {
+    "latitude": -20.98454122042316,
+    "longitude": -47.66299366950989
+  },
+  "Estrada Vicinal Jardinópolis|9|Condomínio Esmeralda": {
+    "latitude": -20.985082151934716,
+    "longitude": -47.675235271453865
+  },
+  "Rua João Gonçalves Sardinha|501|Posto de Saúde Euclides": {
+    "latitude": -20.985042083001034,
+    "longitude": -47.67018198966981
+  },
+  "Rua João Gonçalves Sardinha|211|Capelinha São Judas": {
+    "latitude": -20.98501203129372,
+    "longitude": -47.66581535339356
+  },
+  "Rua Capitão João Pereira Ramos|499|Supermercado 3J": {
+    "latitude": -20.985032065765935,
+    "longitude": -47.66286492347718
+  },
+  "Rua Capitão João Pereira Ramos|81|Supermercado Cristal": {
+    "latitude": -20.98667488334341,
+    "longitude": -47.659463882446296
+  }
+}
