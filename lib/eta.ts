@@ -1,4 +1,4 @@
-import { distanceMeters, pathLength, projectOnPath } from "./geo";
+import { distanceMeters, projectOnPath, type Point } from "./geo";
 import type { LineWithStops } from "./queries";
 import type { VehiclePosition } from "./schemas";
 
@@ -21,19 +21,23 @@ export type Arrival = {
   etaSeconds: number;
 };
 
-// Monta o circuito da linha: trajeto fechado e a distância de cada parada
-// desde o ponto de partida.
+// Monta o circuito da linha: caminho fechado (paradas + curvas) e a distância
+// de cada parada desde o ponto de partida, medida ao longo do caminho.
 export function buildRoute(line: LineWithStops) {
-  const loop = [...line.stops, line.stops[0]];
+  const nodes: Point[] = line.path ?? line.stops;
+  const loop = nodes.length > 0 ? [...nodes, nodes[0]] : [];
 
-  const stopDistances: number[] = [];
-  let walked = 0;
-  line.stops.forEach((stop, index) => {
-    if (index > 0) walked += distanceMeters(line.stops[index - 1], stop);
-    stopDistances.push(walked);
-  });
+  // Distância acumulada até cada vértice do circuito
+  const cumulative: number[] = [0];
+  for (let i = 1; i < loop.length; i++) {
+    cumulative.push(cumulative[i - 1] + distanceMeters(loop[i - 1], loop[i]));
+  }
 
-  return { loop, stopDistances, total: pathLength(loop) };
+  const stopDistances = line.stops.map(
+    (stop, index) => cumulative[stop.pathIndex ?? index] ?? 0
+  );
+
+  return { loop, stopDistances, total: cumulative[cumulative.length - 1] };
 }
 
 // Previsão de chegada de cada ônibus da linha a uma parada, do mais próximo

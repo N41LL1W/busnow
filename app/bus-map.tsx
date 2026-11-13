@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Map as LeafletMap, Marker } from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { formatEta, type Arrival } from "@/lib/eta";
+import { buildRoute, formatEta, type Arrival } from "@/lib/eta";
 import type { LineWithStops } from "@/lib/queries";
 import { useVehicles } from "@/lib/use-vehicles";
 
@@ -69,11 +69,13 @@ export function BusMap({ lines }: { lines: LineWithStops[] }) {
           '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       }).addTo(instance);
 
-      // Trajeto: liga as paradas em ordem e fecha o circuito (circular)
+      // Trajeto: o caminho completo da linha (paradas + curvas), fechando o
+      // circuito. É o mesmo caminho que o simulador e a previsão usam.
       for (const line of lines) {
-        if (line.stops.length < 2) continue;
-        const path = [...line.stops, line.stops[0]].map(
-          (s) => [s.latitude, s.longitude] as [number, number]
+        const { loop } = buildRoute(line);
+        if (loop.length < 3) continue;
+        const path = loop.map(
+          (p) => [p.latitude, p.longitude] as [number, number]
         );
         L.polyline(path, { color: line.color, weight: 4, opacity: 0.8 }).addTo(
           instance

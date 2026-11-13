@@ -5,6 +5,8 @@ import { resolveStops } from "./data/positions";
 config({ path: ".env.local" });
 
 async function main() {
+  const force = process.argv.includes("--force");
+
   // Posição de cada ponto: ajuste manual > coordenada achada pelo geocode
   const resolved = new Map(
     resolveStops().map((stop) => [stop.key, stop] as const)
@@ -17,9 +19,6 @@ async function main() {
   if (missing.length > 0) {
     console.error(`Faltam posições para ${missing.length} ponto(s):`);
     missing.forEach((stop) => console.error(`  - ${stop.name}`));
-    console.error(
-      "\nAbra http://localhost:3000/dev/pontos (com `npm run dev` rodando) e arraste esses pontos para o lugar certo."
-    );
     process.exit(1);
   }
 
@@ -29,7 +28,21 @@ async function main() {
     "./schema"
   );
 
-  // ATENÇÃO: limpa as tabelas. Use só em desenvolvimento.
+  // 2. TRAVA: o banco é a fonte da verdade. Se já tem linhas, elas podem ter
+  // sido editadas no painel, e recriar tudo apagaria esse trabalho.
+  const existing = await db.select({ id: lines.id }).from(lines).limit(1);
+  if (existing.length > 0 && !force) {
+    console.error("O banco já tem linhas cadastradas. Nada foi alterado.");
+    console.error(
+      "Rodar o seed APAGA tudo e recria a partir de db/data, perdendo o que foi editado no painel."
+    );
+    console.error("Se é isso mesmo que você quer: npm run db:seed -- --force");
+    process.exit(1);
+  }
+  if (existing.length > 0) {
+    console.log("ATENÇÃO: --force usado. Apagando tudo e recriando...");
+  }
+
   await db.delete(vehicles);
   await db.delete(schedules);
   await db.delete(lineStops);
@@ -45,7 +58,7 @@ async function main() {
       .values({ code: line.code, name: line.name, color: line.color })
       .returning();
 
-    // 2. Cria só as paradas que ainda não existem
+    // 3. Cria só as paradas que ainda não existem
     const newStops = line.stops.filter((stop) => !stopIds.has(stopKey(stop)));
 
     if (newStops.length > 0) {
@@ -58,6 +71,8 @@ async function main() {
               name: point.name,
               latitude: point.latitude as number,
               longitude: point.longitude as number,
+              kind: "stop" as const,
+              confirmed: point.source === "manual",
             };
           })
         )
@@ -66,7 +81,7 @@ async function main() {
       newStops.forEach((stop, i) => stopIds.set(stopKey(stop), created[i].id));
     }
 
-    // 3. Liga as paradas à linha, na ordem, com os minutos de cada uma
+    // 4. Liga as paradas à linha, na ordem, com os minutos de cada uma
     await db.insert(lineStops).values(
       line.stops.map((stop, i) => ({
         lineId: createdLine.id,
@@ -77,7 +92,7 @@ async function main() {
       }))
     );
 
-    // 4. Horários de saída do terminal
+    // 5. Horários de saída do terminal
     await db.insert(schedules).values([
       ...line.weekdayDepartures.map((time) => ({
         lineId: createdLine.id,
@@ -93,7 +108,7 @@ async function main() {
       })),
     ]);
 
-    // 5. Um ônibus simulado por linha (cada linha tem um só veículo)
+    // 6. Um ônibus simulado por linha (cada linha tem um só veículo)
     await db.insert(vehicles).values({
       externalId: `SIM-${String(lineIndex + 1).padStart(3, "0")}`,
       label: `Ônibus ${line.code}`,
@@ -103,13 +118,7 @@ async function main() {
     console.log(`Linha ${line.code}: ${line.stops.length} pontos.`);
   }
 
-  const pending = [...resolved.values()].filter(
-    (stop) => stop.source !== "manual"
-  ).length;
   console.log("Seed concluído.");
-  console.log(
-    `${pending} de ${resolved.size} pontos ainda não foram conferidos em /dev/pontos.`
-  );
 }
 
 main().catch((err) => {

@@ -8,12 +8,16 @@ import {
   time,
   timestamp,
   doublePrecision,
-  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
 // Tipo de dia: o horário muda entre dia útil, sábado e domingo/feriado
 export const dayType = pgEnum("day_type", ["weekday", "saturday", "sunday"]);
+
+// Tipo de ponto do trajeto:
+//   stop     = parada onde o passageiro embarca (aparece para todos)
+//   waypoint = "curva": ponto invisível ao público, só para desenhar o caminho
+export const stopKind = pgEnum("stop_kind", ["stop", "waypoint"]);
 
 // Linhas (ex.: Circular 1)
 export const lines = pgTable("lines", {
@@ -25,36 +29,34 @@ export const lines = pgTable("lines", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-// Paradas (pontos de ônibus)
+// Pontos do trajeto: paradas e curvas (veja "kind")
+// confirmed = alguém conferiu a posição no mapa
 export const stops = pgTable("stops", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   latitude: doublePrecision("latitude").notNull(),
   longitude: doublePrecision("longitude").notNull(),
+  kind: stopKind("kind").notNull().default("stop"),
+  confirmed: boolean("confirmed").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-// Ordem das paradas em cada linha e sentido
+// Ordem dos pontos (paradas e curvas) em cada linha e sentido.
+// O painel mantém "position" sempre como 1, 2, 3...
 // offsetMinutes = minutos depois da saída do terminal em que o ônibus
 // passa neste ponto (horário do ponto = saída + offsetMinutes)
-export const lineStops = pgTable(
-  "line_stops",
-  {
-    id: serial("id").primaryKey(),
-    lineId: integer("line_id")
-      .notNull()
-      .references(() => lines.id, { onDelete: "cascade" }),
-    stopId: integer("stop_id")
-      .notNull()
-      .references(() => stops.id, { onDelete: "cascade" }),
-    direction: integer("direction").notNull().default(0), // 0 = ida, 1 = volta
-    position: integer("position").notNull(), // 1, 2, 3...
-    offsetMinutes: integer("offset_minutes").notNull().default(0),
-  },
-  (t) => [
-    uniqueIndex("line_stops_unique").on(t.lineId, t.direction, t.position),
-  ]
-);
+export const lineStops = pgTable("line_stops", {
+  id: serial("id").primaryKey(),
+  lineId: integer("line_id")
+    .notNull()
+    .references(() => lines.id, { onDelete: "cascade" }),
+  stopId: integer("stop_id")
+    .notNull()
+    .references(() => stops.id, { onDelete: "cascade" }),
+  direction: integer("direction").notNull().default(0), // 0 = ida, 1 = volta
+  position: integer("position").notNull(), // 1, 2, 3...
+  offsetMinutes: integer("offset_minutes").notNull().default(0),
+});
 
 // Horários de saída do ponto inicial
 export const schedules = pgTable("schedules", {

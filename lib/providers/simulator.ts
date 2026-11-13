@@ -1,61 +1,46 @@
-import { and, asc, eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { lines, lineStops, stops, vehicles } from "@/db/schema";
-import { pathLength, pointAlongPath } from "@/lib/geo";
+import { vehicles } from "@/db/schema";
+import { buildRoute } from "@/lib/eta";
+import { pointAlongPath } from "@/lib/geo";
+import { getLinesWithStops } from "@/lib/queries";
 import type { VehiclePosition } from "@/lib/schemas";
 
 const SPEED_KMH = 25;
 
 export async function getSimulatedPositions(): Promise<VehiclePosition[]> {
-  // 1. Veículos ativos que têm linha
-  const fleet = await db
-    .select({
-      externalId: vehicles.externalId,
-      lineId: lines.id,
-      lineCode: lines.code,
-    })
-    .from(vehicles)
-    .innerJoin(lines, eq(vehicles.lineId, lines.id))
-    .where(eq(vehicles.active, true))
-    .orderBy(asc(vehicles.id));
+  const [fleet, allLines] = await Promise.all([
+    db
+      .select({ externalId: vehicles.externalId, lineId: vehicles.lineId })
+      .from(vehicles)
+      .where(eq(vehicles.active, true))
+      .orderBy(asc(vehicles.id)),
+    getLinesWithStops(),
+  ]);
 
-  // 2. Agrupa os veículos por linha
-  const byLine = new Map<number, typeof fleet>();
-  for (const bus of fleet) {
-    const group = byLine.get(bus.lineId) ?? [];
-    group.push(bus);
-    byLine.set(bus.lineId, group);
-  }
-
-  const positions: VehiclePosition[] = [];
   const metersPerSecond = (SPEED_KMH * 1000) / 3600;
   const nowMs = Date.now();
+  const positions: VehiclePosition[] = [];
 
-  for (const [lineId, group] of byLine) {
-    // 3. Paradas da linha, na ordem (sentido ida)
-    const routeStops = await db
-      .select({ latitude: stops.latitude, longitude: stops.longitude })
-      .from(lineStops)
-      .innerJoin(stops, eq(lineStops.stopId, stops.id))
-      .where(and(eq(lineStops.lineId, lineId), eq(lineStops.direction, 0)))
-      .orderBy(asc(lineStops.position));
+  for (const line of allLines) {
+    const buses = fleet.filter((bus) => bus.lineId === line.id);
+    if (buses.length === 0) continue;
 
-    if (routeStops.length < 2) continue;
+    // O mesmo caminho (com curvas) que a previsão de chegada usa
+    const { loop, total } = buildRoute(line);
+    if (loop.length < 3 || total === 0) continue;
 
-    // 4. Circular: o trajeto fecha voltando à primeira parada
-    const loop = [...routeStops, routeStops[0]];
-    const total = pathLength(loop);
     const traveled = (nowMs / 1000) * metersPerSecond;
 
-    // 5. Cada ônibus fica espaçado igualmente ao longo do circuito
-    group.forEach((bus, index) => {
-      const offset = (total / group.length) * index;
+    // Cada ônibus fica espaçado igualmente ao longo do circuito
+    buses.forEach((bus, index) => {
+      const offset = (total / buses.length) * index;
       const distance = (traveled + offset) % total;
       const { point, heading } = pointAlongPath(loop, distance);
 
       positions.push({
         vehicleId: bus.externalId,
-        lineCode: bus.lineCode,
+        lineCode: line.code,
         latitude: point.latitude,
         longitude: point.longitude,
         speedKmh: SPEED_KMH,
