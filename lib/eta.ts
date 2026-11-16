@@ -1,4 +1,4 @@
-import { distanceMeters, projectOnPath, type Point } from "./geo";
+import { distanceMeters, pointAlongPath, projectOnPath, type Point } from "./geo";
 import type { LineWithStops } from "./queries";
 import type { VehiclePosition } from "./schemas";
 
@@ -21,17 +21,55 @@ export type Arrival = {
   etaSeconds: number;
 };
 
-// Monta o circuito da linha: caminho fechado (paradas + curvas) e a distância
-// de cada parada desde o ponto de partida, medida ao longo do caminho.
+// Distância acumulada desde o início até cada ponto do trajeto
+function cumulativeDistances(points: Point[]): number[] {
+  const cumulative: number[] = [0];
+  for (let i = 1; i < points.length; i++) {
+    cumulative.push(cumulative[i - 1] + distanceMeters(points[i - 1], points[i]));
+  }
+  return cumulative;
+}
+
+// O trajeto a partir de "distance" metros do início (para encaixar a próxima
+// parada só do ponto da anterior em diante)
+function pathFrom(
+  loop: Point[],
+  cumulative: number[],
+  distance: number
+): Point[] {
+  let k = 0;
+  while (k < loop.length - 2 && cumulative[k + 1] <= distance) k++;
+  const { point } = pointAlongPath(loop, distance);
+  return [point, ...loop.slice(k + 1)];
+}
+
+// Monta o circuito da linha: caminho fechado e a distância de cada parada
+// desde o ponto de partida, medida ao longo do caminho.
 export function buildRoute(line: LineWithStops) {
+  // 1. Com traçado pelas ruas salvo, usa ele (já vem fechando o circuito)
+  if (line.geometry && line.geometry.length >= 3) {
+    const loop: Point[] = line.geometry.map(([latitude, longitude]) => ({
+      latitude,
+      longitude,
+    }));
+    const cumulative = cumulativeDistances(loop);
+
+    // Cada parada é encaixada no traçado, sempre à frente da anterior
+    let previous = 0;
+    const stopDistances = line.stops.map((stop, index) => {
+      if (index === 0) return 0; // a primeira parada é o início do circuito
+      const rest = pathFrom(loop, cumulative, previous);
+      previous += projectOnPath(rest, stop).distanceAlong;
+      return previous;
+    });
+
+    return { loop, stopDistances, total: cumulative[cumulative.length - 1] };
+  }
+
+  // 2. Sem traçado: liga as paradas e curvas em linha reta
   const nodes: Point[] = line.path ?? line.stops;
   const loop = nodes.length > 0 ? [...nodes, nodes[0]] : [];
-
-  // Distância acumulada até cada vértice do circuito
-  const cumulative: number[] = [0];
-  for (let i = 1; i < loop.length; i++) {
-    cumulative.push(cumulative[i - 1] + distanceMeters(loop[i - 1], loop[i]));
-  }
+  const cumulative = cumulativeDistances(loop);
 
   const stopDistances = line.stops.map(
     (stop, index) => cumulative[stop.pathIndex ?? index] ?? 0

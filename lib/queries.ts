@@ -23,6 +23,9 @@ export type LineWithStops = {
   // caminho completo, na ordem: paradas + curvas. As curvas só servem para
   // desenhar o caminho; nunca aparecem como ponto na tela pública.
   path?: Point[];
+  // traçado pelas ruas gerado no painel, como [latitude, longitude]
+  // (null ou ausente = ainda não gerado)
+  geometry?: [number, number][] | null;
 };
 
 // Linhas ativas com seus pontos, na ordem (sentido ida)
@@ -33,6 +36,7 @@ export async function getLinesWithStops(): Promise<LineWithStops[]> {
       code: lines.code,
       name: lines.name,
       color: lines.color,
+      geometry: lines.geometry,
       stopId: stops.id,
       stopName: stops.name,
       kind: stops.kind,
@@ -59,6 +63,7 @@ export async function getLinesWithStops(): Promise<LineWithStops[]> {
         color: row.color,
         stops: [],
         path: [],
+        geometry: row.geometry,
       };
       byLine.set(row.lineId, line);
     }

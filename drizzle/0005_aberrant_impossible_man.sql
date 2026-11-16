@@ -1,0 +1,1 @@
+ALTER TABLE "lines" RENAME COLUMN "geometry_fingerprint" TO "geometry_hash";

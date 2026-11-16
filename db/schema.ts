@@ -8,6 +8,7 @@ import {
   time,
   timestamp,
   doublePrecision,
+  jsonb,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -26,6 +27,12 @@ export const lines = pgTable("lines", {
   name: text("name").notNull(),
   color: text("color").notNull().default("#2563eb"),
   active: boolean("active").notNull().default(true),
+  // Traçado pelas ruas, gerado no painel: lista de [latitude, longitude].
+  // null = ainda não gerado (o mapa liga os pontos em linha reta).
+  geometry: jsonb("geometry").$type<[number, number][]>(),
+  // "Impressão digital" dos pontos usados para gerar o traçado. Se os pontos
+  // mudarem depois, ela deixa de bater e o painel avisa que está desatualizado.
+  geometryHash: text("geometry_hash"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

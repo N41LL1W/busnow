@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { LeafletMouseEvent, Map as LeafletMap } from "leaflet";
+import type { LatLng, LeafletMouseEvent, Map as LeafletMap } from "leaflet";
 import "leaflet/dist/leaflet.css";
 
 type Leaflet = typeof import("leaflet");
@@ -23,8 +23,12 @@ type AdminLine = {
   code: string;
   name: string;
   color: string;
+  geometry: [number, number][] | null; // traçado pelas ruas (se já gerado)
+  geometryStale: boolean; // os pontos mudaram depois de gerar o traçado
   nodes: AdminNode[];
 };
+
+type Report = { points: number; kilometers: number; warnings: string[] };
 
 // Atenção: o Leaflet usa [latitude, longitude]
 const TOWN_CENTER: [number, number] = [-20.9886, -47.6578];
@@ -41,6 +45,33 @@ async function fetchLines(): Promise<AdminLine[]> {
   return json.lines;
 }
 
+// Descobre qual trecho da linha fica MAIS PERTO de um ponto do mapa.
+// Não dá para confiar em qual linha recebeu o clique: perto de um ponto,
+// a linha que chega e a que sai se sobrepõem, e o clique ia para a errada.
+function nearestSegment(
+  L: Leaflet,
+  map: LeafletMap,
+  latlng: LatLng,
+  loop: AdminNode[]
+): number {
+  const target = map.latLngToLayerPoint(latlng);
+  let best = 0;
+  let bestDistance = Infinity;
+
+  for (let i = 0; i < loop.length - 1; i++) {
+    const a = map.latLngToLayerPoint([loop[i].latitude, loop[i].longitude]);
+    const b = map.latLngToLayerPoint([loop[i + 1].latitude, loop[i + 1].longitude]);
+    const distance = L.LineUtil.pointToSegmentDistance(target, a, b);
+
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      best = i;
+    }
+  }
+
+  return best;
+}
+
 export function LineEditor() {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
@@ -54,12 +85,50 @@ export function LineEditor() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [mode, setMode] = useState<Mode>("idle");
   const [busy, setBusy] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [report, setReport] = useState<Report | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const activeLine = lines.find((line) => line.code === activeCode) ?? lines[0];
   const nodes = activeLine?.nodes ?? [];
   const selectedIndex = nodes.findIndex((node) => node.id === selectedId);
   const selected = selectedIndex >= 0 ? nodes[selectedIndex] : undefined;
+
+  // Só as paradas são numeradas (igual ao PDF); curvas não têm número
+  const stopNumbers = new Map<number, number>();
+  nodes.forEach((node) => {
+    if (node.kind === "stop") stopNumbers.set(node.id, stopNumbers.size + 1);
+  });
+
+  // Onde uma curva está: entre quais paradas
+  function curveContext(index: number): string {
+    let before: number | undefined;
+    let after: number | undefined;
+
+    for (let i = index - 1; i >= 0; i--) {
+      if (nodes[i].kind === "stop") {
+        before = stopNumbers.get(nodes[i].id);
+        break;
+      }
+    }
+    for (let i = index + 1; i < nodes.length; i++) {
+      if (nodes[i].kind === "stop") {
+        after = stopNumbers.get(nodes[i].id);
+        break;
+      }
+    }
+
+    if (before && after) return `entre as paradas ${before} e ${after}`;
+    if (before) return `depois da parada ${before} (na volta ao início)`;
+    return "antes da primeira parada";
+  }
+
+  function labelFor(index: number): string {
+    const node = nodes[index];
+    return node.kind === "stop"
+      ? `${stopNumbers.get(node.id)}. ${node.name}`
+      : `↳ curva ${curveContext(index)}`;
+  }
 
   // Recarrega do banco (usada depois de cada edição)
   const reload = useCallback(async () => {
@@ -115,6 +184,32 @@ export function LineEditor() {
     },
     [reload]
   );
+
+  // Gera o traçado pelas ruas da linha ativa
+  async function generate() {
+    if (!activeLine) return;
+    setGenerating(true);
+    setError(null);
+    setReport(null);
+
+    try {
+      const res = await fetch("/api/admin/geometry", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lineId: activeLine.id }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Não foi possível gerar o traçado.");
+      setReport(json);
+      await reload();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Não foi possível gerar o traçado."
+      );
+    } finally {
+      setGenerating(false);
+    }
+  }
 
   // Efeito 1: cria o mapa UMA vez
   useEffect(() => {
@@ -182,32 +277,47 @@ export function LineEditor() {
     const group = L.layerGroup().addTo(map);
     const lineNodes = activeLine.nodes;
     const loop = lineNodes.length > 1 ? [...lineNodes, lineNodes[0]] : [];
+    const hasGeometry = Boolean(activeLine.geometry);
 
-    // Trechos entre pontos. Clicar num trecho cria uma curva ali.
+    // Traçado pelas ruas (se já foi gerado): linha cheia por baixo de tudo
+    if (activeLine.geometry && activeLine.geometry.length > 1) {
+      L.polyline(activeLine.geometry, {
+        color: activeLine.color,
+        weight: 5,
+        opacity: 0.9,
+        interactive: false,
+      }).addTo(group);
+    }
+
+    // Esqueleto: um trecho reto entre cada par de pontos. Clicar cria uma
+    // curva. Com o traçado gerado ele fica fino e tracejado.
     for (let i = 0; i < loop.length - 1; i++) {
-      const from = loop[i];
-      const to = loop[i + 1];
-
       L.polyline(
         [
-          [from.latitude, from.longitude],
-          [to.latitude, to.longitude],
+          [loop[i].latitude, loop[i].longitude],
+          [loop[i + 1].latitude, loop[i + 1].longitude],
         ],
         {
-          color: activeLine.color,
-          weight: 5,
+          color: hasGeometry ? "#334155" : activeLine.color,
+          weight: hasGeometry ? 3 : 5,
           opacity: 0.7,
+          dashArray: hasGeometry ? "4 6" : undefined,
           interactive: mode === "idle",
         }
       )
         .bindTooltip("Clique para adicionar uma curva aqui", { sticky: true })
         .on("click", (e: LeafletMouseEvent) => {
           L.DomEvent.stopPropagation(e);
+
+          // O trecho é decidido pela geometria, não pela linha que recebeu
+          // o clique (veja nearestSegment)
+          const index = nearestSegment(L, map, e.latlng, loop);
+
           edit({
             action: "addNode",
             lineId: activeLine.id,
             kind: "waypoint",
-            afterLineStopId: from.id,
+            afterLineStopId: loop[index].id,
             latitude: e.latlng.lat,
             longitude: e.latlng.lng,
           }).then((result) => {
@@ -301,6 +411,7 @@ export function LineEditor() {
     setActiveCode(code);
     setSelectedId(null);
     setMode("idle");
+    setReport(null);
   }
 
   function selectFromList(node: AdminNode) {
@@ -320,6 +431,16 @@ export function LineEditor() {
     edit({ action: "reorder", lineId: activeLine.id, orderedIds: ids });
   }
 
+  // Move o item para logo depois de outro (null = para o início da lista)
+  function moveAfter(id: number, afterId: number | null) {
+    if (!activeLine) return;
+    const ids = nodes.map((node) => node.id).filter((itemId) => itemId !== id);
+    const at = afterId === null ? -1 : ids.indexOf(afterId);
+    if (afterId !== null && at === -1) return;
+    ids.splice(at + 1, 0, id);
+    edit({ action: "reorder", lineId: activeLine.id, orderedIds: ids });
+  }
+
   async function remove(node: AdminNode) {
     const label = node.kind === "stop" ? `o ponto "${node.name}"` : "esta curva";
     const text =
@@ -332,13 +453,15 @@ export function LineEditor() {
     setSelectedId(null);
   }
 
-  const stopCount = nodes.filter((node) => node.kind === "stop").length;
+  const stopCount = stopNumbers.size;
   const curveCount = nodes.length - stopCount;
+  const insertAfterLabel =
+    selectedIndex >= 0 ? labelFor(selectedIndex) : "o fim da lista";
 
   return (
     <div className="flex h-screen bg-slate-900 text-white">
       <aside className="flex w-80 shrink-0 flex-col border-r border-slate-700">
-        <div className="border-b border-slate-700 p-4">
+        <div className="max-h-[55vh] overflow-y-auto border-b border-slate-700 p-4">
           <h1 className="text-lg font-bold">Editor de linhas</h1>
 
           {loadFailed && (
@@ -397,10 +520,56 @@ export function LineEditor() {
           <p className="mt-2 text-xs text-slate-400">
             {mode === "idle"
               ? "Dica: para criar uma curva no meio de um trecho, clique direto na linha. Arraste qualquer ponto para mover."
-              : "Clique no mapa para posicionar. O novo ponto entra depois do item selecionado (ou no fim, se não houver seleção)."}
+              : `Clique no mapa para posicionar. O novo ponto entra depois de: ${insertAfterLabel}.`}
           </p>
 
-          <p className="mt-1 h-4 text-xs">
+          <button
+            onClick={generate}
+            disabled={busy || generating || nodes.length < 2}
+            className="mt-3 w-full rounded bg-emerald-700 px-3 py-2 text-xs font-semibold disabled:opacity-40"
+          >
+            {generating ? "Gerando traçado..." : "Gerar traçado pelas ruas"}
+          </button>
+
+          {activeLine && (
+            <p
+              className={`mt-1 text-xs ${
+                !activeLine.geometry
+                  ? "text-slate-400"
+                  : activeLine.geometryStale
+                    ? "text-amber-300"
+                    : "text-emerald-300"
+              }`}
+            >
+              {!activeLine.geometry
+                ? "Sem traçado: os pontos estão ligados em linha reta."
+                : activeLine.geometryStale
+                  ? "Traçado desatualizado: você mexeu nos pontos depois de gerar. Gere de novo."
+                  : "Traçado pelas ruas em dia."}
+            </p>
+          )}
+
+          {report && (
+            <div className="mt-2 rounded bg-slate-800 p-2 text-xs">
+              <p className="font-semibold text-emerald-300">
+                Traçado gerado: {report.kilometers} km, {report.points} pontos.
+              </p>
+              {report.warnings.length > 0 ? (
+                <>
+                  <p className="mt-1 text-amber-300">Confira:</p>
+                  <ul className="mt-1 max-h-32 list-disc space-y-1 overflow-y-auto pl-4 text-slate-300">
+                    {report.warnings.map((warning, i) => (
+                      <li key={`${i}-${warning}`}>{warning}</li>
+                    ))}
+                  </ul>
+                </>
+              ) : (
+                <p className="mt-1 text-slate-300">Nenhum ponto suspeito.</p>
+              )}
+            </div>
+          )}
+
+          <p className="mt-1 min-h-4 text-xs">
             {busy && <span className="text-slate-400">Salvando...</span>}
             {!busy && error && <span className="text-red-400">{error}</span>}
           </p>
@@ -434,7 +603,7 @@ export function LineEditor() {
                 className="flex min-w-0 flex-1 items-center gap-2 text-left"
               >
                 <span className="w-6 shrink-0 text-right text-slate-500">
-                  {index + 1}
+                  {node.kind === "stop" ? stopNumbers.get(node.id) : "↳"}
                 </span>
                 <span
                   className={
@@ -474,8 +643,10 @@ export function LineEditor() {
         {selected && (
           <div className="space-y-2 border-t border-slate-700 p-4 text-sm">
             <p className="text-xs text-slate-400">
-              {selected.kind === "stop" ? "Parada" : "Curva"} nº {selectedIndex + 1} ·{" "}
-              {selected.latitude.toFixed(6)}, {selected.longitude.toFixed(6)}
+              {selected.kind === "stop"
+                ? `Parada nº ${stopNumbers.get(selected.id)}`
+                : `Curva ${curveContext(selectedIndex)}`}{" "}
+              · {selected.latitude.toFixed(6)}, {selected.longitude.toFixed(6)}
             </p>
 
             {selected.kind === "stop" && (
@@ -503,21 +674,27 @@ export function LineEditor() {
               </p>
             )}
 
-            <label className="flex items-center gap-2 text-xs text-slate-300">
-              Mover para a posição nº
-              <input
-                key={`${selected.id}-${selectedIndex}`}
-                type="number"
-                min={1}
-                max={nodes.length}
-                defaultValue={selectedIndex + 1}
-                onBlur={(e) => reorder(selectedIndex, Number(e.target.value) - 1)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") e.currentTarget.blur();
-                }}
-                className="w-16 rounded bg-slate-800 px-2 py-1"
-              />
-            </label>
+            <select
+              key={`${selected.id}-${selectedIndex}`}
+              defaultValue=""
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === "") return;
+                moveAfter(selected.id, value === "start" ? null : Number(value));
+              }}
+              className="w-full rounded bg-slate-800 px-2 py-1.5 text-xs"
+              aria-label="Mover para depois de"
+            >
+              <option value="">Mover para depois de...</option>
+              <option value="start">(início da lista)</option>
+              {nodes.map((node, index) =>
+                node.id === selected.id ? null : (
+                  <option key={node.id} value={node.id}>
+                    {labelFor(index)}
+                  </option>
+                )
+              )}
+            </select>
 
             <div className="flex flex-wrap gap-2">
               {selected.kind === "stop" && !selected.confirmed && (

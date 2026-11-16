@@ -2,6 +2,7 @@ import { asc, eq } from "drizzle-orm";
 import { connection, NextResponse } from "next/server";
 import { db } from "@/db";
 import { lines, lineStops, stops } from "@/db/schema";
+import { nodesHash } from "@/lib/routing";
 
 export async function GET() {
   // Painel só para desenvolvimento por enquanto (login vem na Fase 10)
@@ -38,14 +39,26 @@ export async function GET() {
   }
 
   return NextResponse.json({
-    lines: allLines.map((line) => ({
-      id: line.id,
-      code: line.code,
-      name: line.name,
-      color: line.color,
-      nodes: rows
-        .filter((row) => row.lineId === line.id)
-        .map((row) => ({
+    lines: allLines.map((line) => {
+      const lineRows = rows.filter((row) => row.lineId === line.id);
+
+      // O traçado está desatualizado se os pontos mudaram depois de gerá-lo
+      const currentHash = nodesHash(
+        lineRows.map((row) => ({
+          id: row.lineStopId,
+          latitude: row.latitude,
+          longitude: row.longitude,
+        }))
+      );
+
+      return {
+        id: line.id,
+        code: line.code,
+        name: line.name,
+        color: line.color,
+        geometry: line.geometry,
+        geometryStale: line.geometry !== null && line.geometryHash !== currentHash,
+        nodes: lineRows.map((row) => ({
           id: row.lineStopId,
           kind: row.kind,
           name: row.name,
@@ -56,6 +69,7 @@ export async function GET() {
             .filter((lineId) => lineId !== line.id)
             .map((lineId) => codeByLineId.get(lineId) ?? "?"),
         })),
-    })),
+      };
+    }),
   });
 }

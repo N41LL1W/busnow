@@ -66,16 +66,35 @@ export function pointAlongPath(
   return { point: last, heading: 0 };
 }
 
+// Diferença entre dois ângulos, de 0 a 180 graus
+function angleDifference(a: number, b: number): number {
+  const diff = Math.abs(a - b) % 360;
+  return diff > 180 ? 360 - diff : diff;
+}
+
+// Trechos até esta distância do mais próximo contam como "o mesmo lugar"
+const SAME_PLACE_METERS = 20;
+
 // O contrário de pointAlongPath: dado um ponto (a posição do GPS), descobre
 // em que ponto do trajeto ele está.
 //   distanceAlong = metros percorridos desde o início do trajeto
 //   offsetMeters  = distância do ponto até a rota (quanto ele está "fora" dela)
+//
+// Se o circuito passa duas vezes pela mesma rua (ida e volta), vários trechos
+// ficam igualmente perto. Com a direção do ônibus ("heading"), escolhemos o
+// trecho que aponta para o mesmo lado em que ele anda.
 export function projectOnPath(
   points: Point[],
-  p: Point
+  p: Point,
+  heading?: number
 ): { distanceAlong: number; offsetMeters: number } {
+  type Candidate = {
+    distanceAlong: number;
+    offsetMeters: number;
+    bearing: number;
+  };
+  const candidates: Candidate[] = [];
   let walked = 0;
-  let best = { distanceAlong: 0, offsetMeters: Infinity };
 
   for (let i = 0; i < points.length - 1; i++) {
     const a = points[i];
@@ -99,13 +118,38 @@ export function projectOnPath(
         ? 0
         : Math.max(0, Math.min(1, (P.x * B.x + P.y * B.y) / lengthSquared));
 
-    const offset = Math.hypot(P.x - t * B.x, P.y - t * B.y);
-
-    if (offset < best.offsetMeters) {
-      best = { distanceAlong: walked + t * segment, offsetMeters: offset };
-    }
+    candidates.push({
+      distanceAlong: walked + t * segment,
+      offsetMeters: Math.hypot(P.x - t * B.x, P.y - t * B.y),
+      bearing: bearingDegrees(a, b),
+    });
     walked += segment;
   }
 
-  return best;
+  if (candidates.length === 0) return { distanceAlong: 0, offsetMeters: Infinity };
+
+  let minOffset = Infinity;
+  for (const c of candidates) {
+    if (c.offsetMeters < minOffset) minOffset = c.offsetMeters;
+  }
+
+  // Sem direção: o trecho mais próximo (o primeiro, se houver empate)
+  let best = candidates.find((c) => c.offsetMeters === minOffset) as Candidate;
+
+  if (heading !== undefined) {
+    const close = candidates.filter(
+      (c) => c.offsetMeters <= minOffset + SAME_PLACE_METERS
+    );
+    best = close.reduce((a, b) => {
+      const diffA = angleDifference(a.bearing, heading);
+      const diffB = angleDifference(b.bearing, heading);
+      // Direções quase iguais (trechos em sequência): vale o mais próximo
+      if (Math.abs(diffA - diffB) <= 5) {
+        return b.offsetMeters < a.offsetMeters ? b : a;
+      }
+      return diffB < diffA ? b : a;
+    });
+  }
+
+  return { distanceAlong: best.distanceAlong, offsetMeters: best.offsetMeters };
 }
