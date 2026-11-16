@@ -2,9 +2,8 @@ import { distanceMeters, pointAlongPath, projectOnPath, type Point } from "./geo
 import type { LineWithStops } from "./queries";
 import type { VehiclePosition } from "./schemas";
 
-// Velocidade média usada na previsão. Usamos o mesmo valor do simulador para
-// a demonstração bater. Com dados reais, o ideal é usar a média histórica
-// de cada trecho e horário (isso vem numa fase futura).
+// Velocidade usada na previsão quando a linha não tem a duração da volta
+// (tripMinutes). Com a tabela, a velocidade sai dos horários do PDF.
 export const AVERAGE_SPEED_KMH = 25;
 
 // Ônibus mais longe que isto da rota é ignorado (desvio, GPS ruim, garagem)
@@ -19,6 +18,15 @@ export type Arrival = {
   lineCode: string;
   distanceMeters: number;
   etaSeconds: number;
+};
+
+// Relação entre a posição no trajeto e o horário da tabela.
+// distances[i] metros depois da saída = minutes[i] minutos depois da saída.
+// Os dois vetores crescem sempre, e o último par é a volta ao terminal.
+export type Timeline = {
+  distances: number[];
+  minutes: number[];
+  tripMinutes: number;
 };
 
 // Distância acumulada desde o início até cada ponto do trajeto
@@ -43,30 +51,28 @@ function pathFrom(
   return [point, ...loop.slice(k + 1)];
 }
 
-// Monta o circuito da linha: caminho fechado e a distância de cada parada
-// desde o ponto de partida, medida ao longo do caminho.
-export function buildRoute(line: LineWithStops) {
-  // 1. Com traçado pelas ruas salvo, usa ele (já vem fechando o circuito)
-  if (line.geometry && line.geometry.length >= 3) {
-    const loop: Point[] = line.geometry.map(([latitude, longitude]) => ({
-      latitude,
-      longitude,
-    }));
-    const cumulative = cumulativeDistances(loop);
+// Com traçado pelas ruas salvo (já vem fechando o circuito)
+function routeFromGeometry(line: LineWithStops, geometry: [number, number][]) {
+  const loop: Point[] = geometry.map(([latitude, longitude]) => ({
+    latitude,
+    longitude,
+  }));
+  const cumulative = cumulativeDistances(loop);
 
-    // Cada parada é encaixada no traçado, sempre à frente da anterior
-    let previous = 0;
-    const stopDistances = line.stops.map((stop, index) => {
-      if (index === 0) return 0; // a primeira parada é o início do circuito
-      const rest = pathFrom(loop, cumulative, previous);
-      previous += projectOnPath(rest, stop).distanceAlong;
-      return previous;
-    });
+  // Cada parada é encaixada no traçado, sempre à frente da anterior
+  let previous = 0;
+  const stopDistances = line.stops.map((stop, index) => {
+    if (index === 0) return 0; // a primeira parada é o início do circuito
+    const rest = pathFrom(loop, cumulative, previous);
+    previous += projectOnPath(rest, stop).distanceAlong;
+    return previous;
+  });
 
-    return { loop, stopDistances, total: cumulative[cumulative.length - 1] };
-  }
+  return { loop, stopDistances, total: cumulative[cumulative.length - 1] };
+}
 
-  // 2. Sem traçado: liga as paradas e curvas em linha reta
+// Sem traçado: liga as paradas e curvas em linha reta
+function routeFromNodes(line: LineWithStops) {
   const nodes: Point[] = line.path ?? line.stops;
   const loop = nodes.length > 0 ? [...nodes, nodes[0]] : [];
   const cumulative = cumulativeDistances(loop);
@@ -76,6 +82,90 @@ export function buildRoute(line: LineWithStops) {
   );
 
   return { loop, stopDistances, total: cumulative[cumulative.length - 1] };
+}
+
+// Monta a linha do tempo com os minutos do PDF. Paradas com minuto repetido
+// ou fora de ordem (por exemplo, paradas novas ainda sem horário) não viram
+// ponto de referência: o horário delas é estimado entre os vizinhos.
+function buildTimeline(
+  line: LineWithStops,
+  stopDistances: number[],
+  total: number
+): Timeline | null {
+  const trip = line.tripMinutes;
+  if (!trip || trip <= 0 || total <= 0) return null;
+
+  const distances = [0];
+  const minutes = [0];
+
+  line.stops.forEach((stop, index) => {
+    if (index === 0) return;
+    const minute = stop.offsetMinutes ?? 0;
+    const distance = stopDistances[index];
+
+    if (
+      minute > minutes[minutes.length - 1] &&
+      minute < trip &&
+      distance > distances[distances.length - 1] &&
+      distance < total
+    ) {
+      distances.push(distance);
+      minutes.push(minute);
+    }
+  });
+
+  distances.push(total);
+  minutes.push(trip);
+
+  return { distances, minutes, tripMinutes: trip };
+}
+
+// Monta o circuito da linha: caminho fechado, a distância de cada parada
+// desde o ponto de partida e (se houver a duração da volta) a linha do tempo.
+export function buildRoute(line: LineWithStops) {
+  const base =
+    line.geometry && line.geometry.length >= 3
+      ? routeFromGeometry(line, line.geometry)
+      : routeFromNodes(line);
+
+  return {
+    ...base,
+    timeline: buildTimeline(line, base.stopDistances, base.total),
+  };
+}
+
+// Minutos depois da saída em que o ônibus (seguindo a tabela) está a
+// "distance" metros do início do circuito
+export function minutesAtDistance(timeline: Timeline, distance: number): number {
+  const { distances, minutes } = timeline;
+  const last = distances.length - 1;
+
+  if (distance <= 0) return 0;
+  if (distance >= distances[last]) return minutes[last];
+
+  let k = 0;
+  while (k < last - 1 && distances[k + 1] <= distance) k++;
+
+  const span = distances[k + 1] - distances[k];
+  const fraction = span === 0 ? 0 : (distance - distances[k]) / span;
+  return minutes[k] + fraction * (minutes[k + 1] - minutes[k]);
+}
+
+// O contrário: a que distância do início o ônibus está "minute" minutos
+// depois da saída
+export function distanceAtMinutes(timeline: Timeline, minute: number): number {
+  const { distances, minutes } = timeline;
+  const last = minutes.length - 1;
+
+  if (minute <= 0) return 0;
+  if (minute >= minutes[last]) return distances[last];
+
+  let k = 0;
+  while (k < last - 1 && minutes[k + 1] <= minute) k++;
+
+  const span = minutes[k + 1] - minutes[k];
+  const fraction = span === 0 ? 0 : (minute - minutes[k]) / span;
+  return distances[k] + fraction * (distances[k + 1] - distances[k]);
 }
 
 // Previsão de chegada de cada ônibus da linha a uma parada, do mais próximo
@@ -88,7 +178,7 @@ export function computeArrivals(
   const stopIndex = line.stops.findIndex((stop) => stop.id === stopId);
   if (stopIndex === -1 || line.stops.length < 2) return [];
 
-  const { loop, stopDistances, total } = buildRoute(line);
+  const { loop, stopDistances, total, timeline } = buildRoute(line);
   const metersPerSecond = (AVERAGE_SPEED_KMH * 1000) / 3600;
   const arrivals: Arrival[] = [];
 
@@ -100,17 +190,34 @@ export function computeArrivals(
 
     // Metros que faltam, andando pela rota até a parada
     let distance = stopDistances[stopIndex] - distanceAlong;
+    let wrapped = false;
     if (distance < -PASSED_TOLERANCE_METERS) {
       distance += total; // já passou: precisa dar a volta no circuito
+      wrapped = true;
     } else if (distance < 0) {
       distance = 0; // acabou de passar: conta como "na parada"
+    }
+
+    let etaSeconds: number;
+    if (timeline) {
+      // Com a tabela: tempo que ela leva entre onde o ônibus está e a parada
+      const vehicleMinute = minutesAtDistance(timeline, distanceAlong);
+      const stopMinute = minutesAtDistance(timeline, stopDistances[stopIndex]);
+      const minutes =
+        distance === 0
+          ? 0
+          : stopMinute - vehicleMinute + (wrapped ? timeline.tripMinutes : 0);
+      etaSeconds = Math.max(0, Math.round(minutes * 60));
+    } else {
+      // Sem a tabela: velocidade fixa
+      etaSeconds = Math.round(distance / metersPerSecond);
     }
 
     arrivals.push({
       vehicleId: vehicle.vehicleId,
       lineCode: vehicle.lineCode,
       distanceMeters: Math.round(distance),
-      etaSeconds: Math.round(distance / metersPerSecond),
+      etaSeconds,
     });
   }
 

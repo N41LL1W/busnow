@@ -1,7 +1,8 @@
 import { and, asc, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { lines, lineStops, stops } from "@/db/schema";
+import { lines, lineStops, schedules, stops } from "@/db/schema";
 import type { Point } from "@/lib/geo";
+import { timeToMinutes, type DayType } from "@/lib/time";
 
 export type StopPoint = {
   id: number;
@@ -11,6 +12,8 @@ export type StopPoint = {
   position: number;
   // posição desta parada dentro de "path" (que também tem as curvas)
   pathIndex?: number;
+  // minutos depois da saída do terminal em que o ônibus passa aqui (do PDF)
+  offsetMinutes?: number;
 };
 
 export type LineWithStops = {
@@ -26,6 +29,8 @@ export type LineWithStops = {
   // traçado pelas ruas gerado no painel, como [latitude, longitude]
   // (null ou ausente = ainda não gerado)
   geometry?: [number, number][] | null;
+  // minutos da volta completa até o terminal (null/ausente = não informado)
+  tripMinutes?: number | null;
 };
 
 // Linhas ativas com seus pontos, na ordem (sentido ida)
@@ -37,12 +42,14 @@ export async function getLinesWithStops(): Promise<LineWithStops[]> {
       name: lines.name,
       color: lines.color,
       geometry: lines.geometry,
+      tripMinutes: lines.tripMinutes,
       stopId: stops.id,
       stopName: stops.name,
       kind: stops.kind,
       latitude: stops.latitude,
       longitude: stops.longitude,
       position: lineStops.position,
+      offsetMinutes: lineStops.offsetMinutes,
     })
     .from(lineStops)
     .innerJoin(lines, eq(lineStops.lineId, lines.id))
@@ -64,6 +71,7 @@ export async function getLinesWithStops(): Promise<LineWithStops[]> {
         stops: [],
         path: [],
         geometry: row.geometry,
+        tripMinutes: row.tripMinutes,
       };
       byLine.set(row.lineId, line);
     }
@@ -81,9 +89,39 @@ export async function getLinesWithStops(): Promise<LineWithStops[]> {
         longitude: row.longitude,
         position: row.position,
         pathIndex,
+        offsetMinutes: row.offsetMinutes,
       });
     }
   }
 
   return [...byLine.values()];
+}
+
+// Horários de saída do terminal, por linha e por tipo de dia,
+// em minutos desde a meia-noite (06:30 = 390)
+export type Departures = Record<DayType, number[]>;
+
+export async function getDepartures(): Promise<Map<number, Departures>> {
+  const rows = await db
+    .select({
+      lineId: schedules.lineId,
+      dayType: schedules.dayType,
+      departureTime: schedules.departureTime,
+    })
+    .from(schedules)
+    .where(eq(schedules.direction, 0))
+    .orderBy(asc(schedules.departureTime));
+
+  const byLine = new Map<number, Departures>();
+
+  for (const row of rows) {
+    let entry = byLine.get(row.lineId);
+    if (!entry) {
+      entry = { weekday: [], saturday: [], sunday: [] };
+      byLine.set(row.lineId, entry);
+    }
+    entry[row.dayType].push(timeToMinutes(row.departureTime));
+  }
+
+  return byLine;
 }

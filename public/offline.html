@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0f172a" />
+    <title>Sem conexão - BusNow</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #0f172a;
+        color: #ffffff;
+        font-family: system-ui, sans-serif;
+        text-align: center;
+        padding: 24px;
+      }
+      h1 {
+        font-size: 1.5rem;
+        margin: 16px 0 8px;
+      }
+      p {
+        color: #94a3b8;
+        margin: 0 0 24px;
+      }
+      button {
+        background: #2563eb;
+        color: #ffffff;
+        border: 0;
+        border-radius: 8px;
+        padding: 12px 24px;
+        font-size: 1rem;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div style="font-size: 3rem">🚌</div>
+      <h1>Sem conexão</h1>
+      <p>
+        Para ver onde estão os ônibus, precisamos de internet.
+        Confira sua conexão e tente de novo.
+      </p>
+      <button onclick="location.reload()">Tentar novamente</button>
+    </main>
+  </body>
+</html>

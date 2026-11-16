@@ -27,6 +27,9 @@ export const lines = pgTable("lines", {
   name: text("name").notNull(),
   color: text("color").notNull().default("#2563eb"),
   active: boolean("active").notNull().default(true),
+  // Minutos que o ônibus leva para completar a volta e chegar de novo ao
+  // terminal (ex.: 59). null = ainda não informado.
+  tripMinutes: integer("trip_minutes"),
   // Traçado pelas ruas, gerado no painel: lista de [latitude, longitude].
   // null = ainda não gerado (o mapa liga os pontos em linha reta).
   geometry: jsonb("geometry").$type<[number, number][]>(),
