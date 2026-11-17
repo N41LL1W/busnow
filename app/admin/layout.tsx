@@ -14,7 +14,7 @@ async function AdminBar() {
   if (!admin) return null;
 
   return (
-    <div className="fixed bottom-3 left-[21rem] z-[2000] flex items-center gap-3 rounded-full bg-slate-900/90 px-4 py-2 text-xs text-white shadow-lg">
+    <div className="fixed bottom-3 left-84 z-2000 flex items-center gap-3 rounded-full bg-slate-900/90 px-4 py-2 text-xs text-white shadow-lg">
       <span>{admin.name}</span>
       <Link href="/admin/senha" className="text-blue-300">
         Trocar senha
