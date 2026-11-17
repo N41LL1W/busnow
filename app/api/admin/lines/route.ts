@@ -2,14 +2,15 @@ import { asc, eq } from "drizzle-orm";
 import { connection, NextResponse } from "next/server";
 import { db } from "@/db";
 import { lines, lineStops, stops } from "@/db/schema";
+import { requireAdminApi } from "@/lib/auth";
 import { nodesHash } from "@/lib/routing";
 
 export async function GET() {
-  // Painel só para desenvolvimento por enquanto (login vem na Fase 10)
-  if (process.env.NODE_ENV === "production") {
-    return NextResponse.json({ error: "Indisponível." }, { status: 404 });
-  }
   await connection();
+
+  // Só administradores logados
+  const denied = await requireAdminApi();
+  if (denied) return denied;
 
   const [allLines, rows] = await Promise.all([
     db.select().from(lines).orderBy(asc(lines.id)),

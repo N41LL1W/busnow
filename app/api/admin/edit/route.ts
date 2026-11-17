@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/db";
 import { lines, lineStops, stops } from "@/db/schema";
+import { requireAdminApi } from "@/lib/auth";
 
 // Só aceita posições dentro da região de Brodowski (barra erro de clique)
 const latitude = z.number().min(-21.09).max(-20.89);
@@ -173,10 +174,9 @@ async function reorder(input: Extract<Action, { action: "reorder" }>) {
 }
 
 export async function POST(request: Request) {
-  // Painel só para desenvolvimento por enquanto (login vem na Fase 10)
-  if (process.env.NODE_ENV === "production") {
-    return fail("Indisponível.", 404);
-  }
+  // Só administradores logados, e só pedidos vindos do próprio site
+  const denied = await requireAdminApi(request);
+  if (denied) return denied;
 
   let json: unknown;
   try {
