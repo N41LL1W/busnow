@@ -14,8 +14,17 @@ async function AdminBar() {
   if (!admin) return null;
 
   return (
-    <div className="fixed bottom-3 left-84 z-2000 flex items-center gap-3 rounded-full bg-slate-900/90 px-4 py-2 text-xs text-white shadow-lg">
-      <span>{admin.name}</span>
+    <div className="fixed bottom-3 left-3 z-[2000] flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl bg-slate-900/90 px-4 py-2 text-xs text-white shadow-lg md:left-[21rem]">
+      <span className="font-semibold">{admin.name}</span>
+      <Link href="/admin/linhas" className="text-blue-300">
+        Linhas
+      </Link>
+      <Link href="/admin/aparencia" className="text-blue-300">
+        Aparência
+      </Link>
+      <Link href="/admin/avisos" className="text-blue-300">
+        Avisos
+      </Link>
       <Link href="/admin/senha" className="text-blue-300">
         Trocar senha
       </Link>

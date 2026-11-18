@@ -57,6 +57,13 @@
       "when": 1794915557540,
       "tag": "0007_complex_vanisher",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1795001102813,
+      "tag": "0008_fearless_echo",
+      "breakpoints": true
     }
   ]
 }
