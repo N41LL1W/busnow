@@ -1,76 +1,104 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
+import { NoticeBanner } from "@/components/notice-banner";
+import { SiteFooter } from "@/components/site-footer";
+import { SiteHeader } from "@/components/site-header";
 import { getSettings } from "@/lib/settings";
-import { Branded } from "../brand";
 
-export const metadata: Metadata = {
-  title: "Sobre - BusNow",
-  description: "Como funciona o acompanhamento dos circulares.",
-};
+export const metadata: Metadata = { title: "Sobre" };
 
-async function AboutContent() {
+export default async function AboutPage() {
   const settings = await getSettings();
 
+  // O texto "Sobre" do painel: cada bloco separado por linha em branco vira um parágrafo
+  const paragraphs = settings.aboutText
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
+
+  const contacts: { label: string; content: React.ReactNode }[] = [];
+
+  if (settings.contactPhone) {
+    contacts.push({
+      label: "Telefone",
+      content: (
+        <a
+          href={`tel:${settings.contactPhone.replace(/[^\d+]/g, "")}`}
+          className="underline"
+        >
+          {settings.contactPhone}
+        </a>
+      ),
+    });
+  }
+  if (settings.contactEmail) {
+    contacts.push({
+      label: "E-mail",
+      content: (
+        <a href={`mailto:${settings.contactEmail}`} className="underline">
+          {settings.contactEmail}
+        </a>
+      ),
+    });
+  }
+  if (settings.contactSite) {
+    contacts.push({
+      label: "Site",
+      content: (
+        <a
+          href={settings.contactSite}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline"
+        >
+          {settings.contactSite}
+        </a>
+      ),
+    });
+  }
+  if (settings.contactHours) {
+    contacts.push({ label: "Atendimento", content: settings.contactHours });
+  }
+  if (settings.contactAddress) {
+    contacts.push({ label: "Endereço", content: settings.contactAddress });
+  }
+
   return (
-    <main className="mx-auto max-w-3xl space-y-8 p-4 sm:p-8">
-      <section>
-        <h1 className="text-2xl font-bold">Sobre o {settings.serviceName}</h1>
-        <p className="mt-3 whitespace-pre-line text-slate-300">
-          {settings.about ??
-            `O ${settings.serviceName} mostra onde estão os circulares de ${settings.cityName}, quando o próximo ônibus chega ao seu ponto e os horários de cada linha.`}
-        </p>
-      </section>
+    <main className="min-h-screen bg-slate-900 p-4 text-white sm:p-8">
+      <SiteHeader />
+      <NoticeBanner />
 
-      <section>
-        <h2 className="text-lg font-semibold">Como funciona</h2>
-        <ul className="mt-3 space-y-3 text-slate-300">
-          <li>
-            <strong className="text-white">Mapa:</strong> a posição dos ônibus é
-            atualizada a cada poucos segundos. Toque em um ponto para ver a
-            previsão de chegada.
-          </li>
-          <li>
-            <strong className="text-white">Horários:</strong> escolha a linha, o
-            dia e o ponto para ver todos os horários e o próximo ônibus.
-          </li>
-          <li>
-            <strong className="text-white">Avisos:</strong> mudanças no serviço,
-            como feriados, aparecem em uma faixa no topo.
-          </li>
-        </ul>
-      </section>
+      <h1 className="mb-4 text-2xl font-bold">Sobre o serviço</h1>
 
-      {(settings.phone || settings.email || settings.website) && (
-        <section>
-          <h2 className="text-lg font-semibold">Contato</h2>
-          <ul className="mt-3 space-y-1 text-slate-300">
-            {settings.phone && <li>Telefone: {settings.phone}</li>}
-            {settings.email && <li>E-mail: {settings.email}</li>}
-            {settings.website && (
-              <li>
-                <a
-                  href={settings.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline"
-                >
-                  {settings.website}
-                </a>
-              </li>
-            )}
-          </ul>
+      <div className="max-w-2xl space-y-3 text-slate-200">
+        {paragraphs.length > 0 ? (
+          paragraphs.map((paragraph, index) => (
+            <p key={index} className="whitespace-pre-line">
+              {paragraph}
+            </p>
+          ))
+        ) : (
+          <p>
+            Acompanhe os horários e a posição dos ônibus em tempo real, direto
+            no celular.
+          </p>
+        )}
+      </div>
+
+      {contacts.length > 0 && (
+        <section className="mt-6 max-w-2xl rounded-lg bg-slate-800 p-4">
+          <h2 className="mb-3 text-lg font-semibold">Contato</h2>
+          <dl className="space-y-2 text-sm">
+            {contacts.map((contact) => (
+              <div key={contact.label} className="flex flex-wrap gap-x-3">
+                <dt className="w-28 shrink-0 text-slate-400">{contact.label}</dt>
+                <dd className="min-w-0 wrap-break-word">{contact.content}</dd>
+              </div>
+            ))}
+          </dl>
         </section>
       )}
-    </main>
-  );
-}
 
-export default function AboutPage() {
-  return (
-    <Suspense fallback={<div className="min-h-screen bg-slate-900" />}>
-      <Branded>
-        <AboutContent />
-      </Branded>
-    </Suspense>
+      <SiteFooter />
+    </main>
   );
 }

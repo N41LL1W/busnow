@@ -1,10 +1,13 @@
 import type { MetadataRoute } from "next";
+import { getSettings } from "@/lib/settings";
 
-export default function manifest(): MetadataRoute.Manifest {
+export default async function manifest(): Promise<MetadataRoute.Manifest> {
+  const settings = await getSettings();
+
   return {
-    name: "BusNow Brodowski",
-    short_name: "BusNow",
-    description: "Acompanhe os circulares de Brodowski em tempo real.",
+    name: settings.serviceName,
+    short_name: settings.serviceName.slice(0, 12),
+    description: settings.tagline,
     lang: "pt-BR",
     start_url: "/",
     scope: "/",

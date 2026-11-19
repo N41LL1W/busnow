@@ -64,6 +64,13 @@
       "when": 1795001102813,
       "tag": "0008_fearless_echo",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1795093508233,
+      "tag": "0009_outgoing_hulk",
+      "breakpoints": true
     }
   ]
 }

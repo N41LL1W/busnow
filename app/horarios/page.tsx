@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { NoticeBanner } from "@/components/notice-banner";
+import { SiteFooter } from "@/components/site-footer";
+import { SiteHeader } from "@/components/site-header";
 import { getTimetables } from "@/lib/timetable";
-import { Branded } from "../brand";
 import { Timetable } from "./timetable";
 
 export const metadata: Metadata = {
-  title: "Horários - BusNow Brodowski",
-  description: "Horários dos circulares de Brodowski, ponto a ponto.",
+  title: "Horários",
+  description: "Horários dos circulares, ponto a ponto.",
 };
 
 // Componente de SERVIDOR: busca no banco e entrega os dados à tela
@@ -17,18 +19,19 @@ async function TimetableSection() {
 
 export default function HorariosPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-slate-900" />}>
-      <Branded>
-        <main className="mx-auto max-w-5xl p-4 sm:p-8">
-          <h1 className="mb-4 text-2xl font-bold">Horários</h1>
+    <main className="min-h-screen bg-slate-900 p-4 text-white sm:p-8">
+      <SiteHeader />
+      <NoticeBanner />
 
-          <Suspense
-            fallback={<div className="h-64 animate-pulse rounded-lg bg-slate-800" />}
-          >
-            <TimetableSection />
-          </Suspense>
-        </main>
-      </Branded>
-    </Suspense>
+      <h1 className="mb-4 text-2xl font-bold">Horários</h1>
+
+      <Suspense
+        fallback={<div className="h-64 animate-pulse rounded-lg bg-slate-800" />}
+      >
+        <TimetableSection />
+      </Suspense>
+
+      <SiteFooter />
+    </main>
   );
 }

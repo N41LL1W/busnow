@@ -5,7 +5,7 @@ import { getCurrentAdmin } from "@/lib/auth";
 import { logoutAction } from "./actions";
 
 export const metadata: Metadata = {
-  title: "Admin - BusNow",
+  title: "Painel",
   robots: { index: false, follow: false },
 };
 
@@ -14,8 +14,11 @@ async function AdminBar() {
   if (!admin) return null;
 
   return (
-    <div className="fixed bottom-3 left-3 z-[2000] flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl bg-slate-900/90 px-4 py-2 text-xs text-white shadow-lg md:left-[21rem]">
-      <span className="font-semibold">{admin.name}</span>
+    <nav
+      aria-label="Menu do painel"
+      className="fixed bottom-3 left-1/2 z-2000 flex max-w-[95vw] -translate-x-1/2 flex-wrap items-center justify-center gap-x-4 gap-y-1 rounded-2xl bg-slate-900/95 px-4 py-2 text-xs text-white shadow-lg"
+    >
+      <span className="text-slate-400">{admin.name}</span>
       <Link href="/admin/linhas" className="text-blue-300">
         Linhas
       </Link>
@@ -26,14 +29,17 @@ async function AdminBar() {
         Avisos
       </Link>
       <Link href="/admin/senha" className="text-blue-300">
-        Trocar senha
+        Senha
+      </Link>
+      <Link href="/" target="_blank" className="text-blue-300">
+        Ver o app
       </Link>
       <form action={logoutAction}>
         <button type="submit" className="text-red-300">
           Sair
         </button>
       </form>
-    </div>
+    </nav>
   );
 }
 

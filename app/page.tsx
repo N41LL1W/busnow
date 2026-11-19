@@ -1,6 +1,8 @@
 import { Suspense } from "react";
+import { NoticeBanner } from "@/components/notice-banner";
+import { SiteFooter } from "@/components/site-footer";
+import { SiteHeader } from "@/components/site-header";
 import { getLinesWithStops } from "@/lib/queries";
-import { Branded } from "./brand";
 import { BusMap } from "./bus-map";
 import { InstallPrompt } from "./install-prompt";
 
@@ -11,26 +13,27 @@ async function MapSection() {
 }
 
 export default function Home() {
+  const simulated = (process.env.BUS_PROVIDER ?? "simulator") === "simulator";
+
   return (
-    <Suspense fallback={<div className="min-h-screen bg-slate-900" />}>
-      <Branded>
-        <main className="mx-auto max-w-5xl p-4 sm:p-8">
-          <h1 className="text-2xl font-bold">Onde estão os ônibus agora</h1>
-          <p className="mb-4 mt-1 text-sm text-slate-400">
-            Posição dos circulares em tempo real (dados de simulação).
-          </p>
+    <main className="min-h-screen bg-slate-900 p-4 text-white sm:p-8">
+      <SiteHeader />
+      <NoticeBanner />
 
-          <Suspense
-            fallback={
-              <div className="h-[70vh] animate-pulse rounded-lg bg-slate-800" />
-            }
-          >
-            <MapSection />
-          </Suspense>
+      {simulated && (
+        <p className="mb-2 text-xs text-amber-300">
+          Modo demonstração: as posições dos ônibus são simuladas.
+        </p>
+      )}
 
-          <InstallPrompt />
-        </main>
-      </Branded>
-    </Suspense>
+      <Suspense
+        fallback={<div className="h-[70vh] animate-pulse rounded-lg bg-slate-800" />}
+      >
+        <MapSection />
+      </Suspense>
+
+      <InstallPrompt />
+      <SiteFooter />
+    </main>
   );
 }
