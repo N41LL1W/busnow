@@ -1,8 +1,8 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
-import { createNoticeAction } from "../branding-actions";
 import type { FormState } from "../form-state";
+import { createNoticeAction } from "./actions";
 
 const inputClass = "mt-1 w-full rounded bg-slate-900 px-3 py-2 text-white";
 
@@ -49,13 +49,16 @@ export function NoticeForm() {
         </label>
         <label className="block text-sm text-slate-300">
           Começa em
-          <input type="date" name="startsOn" required className={inputClass} />
+          <input type="datetime-local" name="startsAt" required className={inputClass} />
         </label>
         <label className="block text-sm text-slate-300">
-          Termina em
-          <input type="date" name="endsOn" required className={inputClass} />
+          Termina em (opcional)
+          <input type="datetime-local" name="endsAt" className={inputClass} />
         </label>
       </div>
+      <p className="text-xs text-slate-400">
+        Sem data de término, o aviso fica no ar até você desativar ou excluir.
+      </p>
 
       {state?.error && (
         <p role="alert" className="text-sm text-red-400">
@@ -71,7 +74,7 @@ export function NoticeForm() {
       <button
         type="submit"
         disabled={pending}
-        className="rounded bg-blue-600 px-5 py-2 font-semibold disabled:opacity-50"
+        className="rounded bg-blue-600 px-5 py-2 font-semibold text-white disabled:opacity-50"
       >
         {pending ? "Salvando..." : "Criar aviso"}
       </button>

@@ -71,6 +71,13 @@
       "when": 1795093508233,
       "tag": "0009_outgoing_hulk",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795442988026,
+      "tag": "0010_fix_notices_settings_types",
+      "breakpoints": true
     }
   ]
 }
