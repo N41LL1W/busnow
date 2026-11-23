@@ -1,21 +1,117 @@
 @import "tailwindcss";
 
-/* Cor da marca. O valor real vem do painel (Aparência): o layout o escreve
-   no <html>. Este é só o padrão. */
+/* ---------- Cor da marca ----------
+   O valor real vem do painel (Aparência): o layout o escreve no <html>.
+   Este é só o padrão. Como o painel exige contraste mínimo com branco,
+   texto branco sobre --brand é sempre legível. */
 :root {
   --brand: #2563eb;
 }
 
-/* PROVISÓRIO, até o visual novo (Fase 12): as classes azuis do projeto
-   (bg-blue-600, text-blue-400, text-blue-300) seguem a cor da marca. */
+/* ---------- Tema claro (padrão) ---------- */
+:root {
+  --page: #f4f6fa;
+  --card: #ffffff;
+  --card-2: #eceff5;
+  --ink: #0f172a;
+  --muted: #566074;
+  --line: #dfe3ec;
+  /* a cor da marca usada como TEXTO sobre o fundo do tema */
+  --brand-ink: var(--brand);
+  color-scheme: light;
+}
+
+/* ---------- Tema escuro: automático (celular no modo escuro)... ---------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page: #0b1220;
+    --card: #131c2e;
+    --card-2: #1b2740;
+    --ink: #f1f5f9;
+    --muted: #9aa6bb;
+    --line: #25324b;
+    --brand-ink: color-mix(in srgb, var(--brand) 45%, white);
+    color-scheme: dark;
+  }
+}
+
+/* ---------- ...ou escolhido no botão do cabeçalho ---------- */
+:root[data-theme="dark"] {
+  --page: #0b1220;
+  --card: #131c2e;
+  --card-2: #1b2740;
+  --ink: #f1f5f9;
+  --muted: #9aa6bb;
+  --line: #25324b;
+  --brand-ink: color-mix(in srgb, var(--brand) 45%, white);
+  color-scheme: dark;
+}
+
 @theme inline {
+  --color-page: var(--page);
+  --color-card: var(--card);
+  --color-card-2: var(--card-2);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-brand: var(--brand);
+  --color-brand-ink: var(--brand-ink);
+
+  /* O painel de administração ainda usa as classes azuis do Tailwind:
+     elas seguem a cor da marca. */
   --color-blue-600: var(--brand);
   --color-blue-400: color-mix(in srgb, var(--brand) 70%, white);
   --color-blue-300: color-mix(in srgb, var(--brand) 55%, white);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 body {
+  background: var(--page);
+  color: var(--ink);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+/* Foco visível para quem navega pelo teclado */
+:focus-visible {
+  outline: 2px solid var(--brand-ink);
+  outline-offset: 2px;
+}
+
+/* ---------- Avisos de serviço ---------- */
+.notice {
+  border-left: 4px solid var(--c);
+  background: color-mix(in srgb, var(--c) 14%, var(--card));
+  color: var(--ink);
+}
+.notice-info {
+  --c: #0ea5e9;
+}
+.notice-warning {
+  --c: #f59e0b;
+}
+.notice-critical {
+  --c: #ef4444;
+}
+
+/* ---------- Mapa no modo escuro: escurece os azulejos do OpenStreetMap ---------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .leaflet-tile-pane {
+    filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.9);
+  }
+}
+:root[data-theme="dark"] .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.9);
+}
+
+/* Respeita quem pediu menos animação no sistema */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

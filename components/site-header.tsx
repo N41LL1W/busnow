@@ -1,54 +1,51 @@
 import Link from "next/link";
 import { getSettings } from "@/lib/settings";
+import { DesktopNav } from "./nav-links";
+import { ThemeToggle } from "./theme-toggle";
 
 export async function SiteHeader() {
   const settings = await getSettings();
   const place = [settings.cityName, settings.stateCode]
     .filter(Boolean)
     .join(" - ");
-  const subtitle = settings.tagline || place;
+  const subtitle = place || settings.tagline;
 
   return (
-    <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
-      <Link href="/" className="flex min-w-0 items-center gap-3">
-        {settings.hasLogo ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={`/api/logo?v=${settings.logoVersion}`}
-            alt={`Logotipo de ${settings.serviceName}`}
-            className="h-10 w-auto max-w-32 object-contain"
-          />
-        ) : (
-          <span
-            aria-hidden="true"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xl"
-          >
-            🚌
-          </span>
-        )}
-        <span className="min-w-0">
-          <span className="block truncate text-xl font-bold leading-tight">
-            {settings.serviceName}
-          </span>
-          {subtitle && (
-            <span className="block truncate text-xs text-slate-400">
-              {subtitle}
+    <header className="sticky top-0 z-40 border-b border-line bg-card/85 backdrop-blur">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6">
+        <Link href="/" className="flex min-w-0 items-center gap-3">
+          {settings.hasLogo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={`/api/logo?v=${settings.logoVersion}`}
+              alt={`Logotipo de ${settings.serviceName}`}
+              className="h-9 w-auto max-w-32 object-contain"
+            />
+          ) : (
+            <span
+              aria-hidden="true"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand text-lg font-bold text-white"
+            >
+              {settings.serviceName.slice(0, 1).toUpperCase()}
             </span>
           )}
-        </span>
-      </Link>
+          <span className="min-w-0 leading-tight">
+            <span className="block truncate text-base font-bold">
+              {settings.serviceName}
+            </span>
+            {subtitle && (
+              <span className="block truncate text-xs text-muted">
+                {subtitle}
+              </span>
+            )}
+          </span>
+        </Link>
 
-      <nav className="flex gap-1 text-sm">
-        <Link href="/" className="rounded px-3 py-2 hover:bg-slate-800">
-          Mapa
-        </Link>
-        <Link href="/horarios" className="rounded px-3 py-2 hover:bg-slate-800">
-          Horários
-        </Link>
-        <Link href="/sobre" className="rounded px-3 py-2 hover:bg-slate-800">
-          Sobre
-        </Link>
-      </nav>
+        <div className="flex items-center gap-1">
+          <DesktopNav />
+          <ThemeToggle />
+        </div>
+      </div>
     </header>
   );
 }

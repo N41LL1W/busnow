@@ -34,9 +34,14 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export const viewport: Viewport = {
-  themeColor: "#0f172a",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f4f6fa" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b1220" },
+  ],
   width: "device-width",
   initialScale: 1,
+  // permite usar a área segura (barra do iPhone) com env(safe-area-inset-*)
+  viewportFit: "cover",
 };
 
 export default async function RootLayout({
@@ -47,9 +52,19 @@ export default async function RootLayout({
   return (
     <html
       lang="pt-BR"
+      // o script abaixo muda data-theme antes do React: sem isso, um aviso de hidratação
+      suppressHydrationWarning
       // A cor da marca, escolhida no painel (já validada ao salvar)
       style={{ "--brand": settings.primaryColor } as React.CSSProperties}
     >
+      <head>
+        {/* Aplica o tema salvo ANTES da primeira pintura (evita o "piscar" claro) */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem("busnow:theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}`,
+          }}
+        />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {children}
         <ServiceWorkerRegister />

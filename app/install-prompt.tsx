@@ -53,20 +53,20 @@ export function InstallPrompt() {
   if (dismissed || (!installEvent && !showIosHint)) return null;
 
   return (
-    <div className="mt-4 flex items-center justify-between gap-3 rounded-lg bg-slate-800 p-4 text-sm">
+    <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-card p-4 text-sm">
       {installEvent ? (
         <>
-          <span>Instale o BusNow na tela inicial do seu celular.</span>
+          <span>Instale o app na tela inicial: abre mais rápido e funciona como um aplicativo.</span>
           <div className="flex shrink-0 gap-2">
             <button
               onClick={() => setDismissed(true)}
-              className="rounded px-3 py-2 text-slate-300"
+              className="min-h-11 rounded-lg px-3 text-muted"
             >
               Agora não
             </button>
             <button
               onClick={install}
-              className="rounded bg-blue-600 px-3 py-2 font-semibold text-white"
+              className="min-h-11 rounded-lg bg-brand px-4 font-semibold text-white"
             >
               Instalar
             </button>
@@ -80,7 +80,7 @@ export function InstallPrompt() {
           </span>
           <button
             onClick={() => setDismissed(true)}
-            className="shrink-0 rounded px-3 py-2 text-slate-300"
+            className="min-h-11 shrink-0 rounded-lg px-3 text-muted"
           >
             Fechar
           </button>

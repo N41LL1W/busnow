@@ -7,8 +7,8 @@ export async function SiteFooter() {
     .join(" - ");
 
   return (
-    <footer className="mt-8 border-t border-slate-800 pt-4 text-xs text-slate-400">
-      <p>
+    <footer className="mx-auto mt-10 max-w-7xl border-t border-line px-4 pb-28 pt-6 text-xs text-muted sm:px-6 md:pb-8">
+      <p className="font-semibold text-ink">
         {settings.serviceName}
         {place ? ` · ${place}` : ""}
       </p>

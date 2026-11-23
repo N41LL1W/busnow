@@ -5,6 +5,7 @@ import type { Map as LeafletMap, Marker } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { buildRoute, formatEta, type Arrival } from "@/lib/eta";
 import type { LineWithStops } from "@/lib/queries";
+import { setMyStop } from "@/lib/my-stop";
 import { useVehicles } from "@/lib/use-vehicles";
 
 type Leaflet = typeof import("leaflet");
@@ -96,7 +97,18 @@ export function BusMap({ lines }: { lines: LineWithStops[] }) {
           title.textContent = stop.name;
           const body = document.createElement("div");
           body.className = "mt-1 text-sm";
-          content.append(title, body);
+          
+          // Botão para salvar este ponto como "meu ponto"
+          const saveButton = document.createElement("button");
+          saveButton.type = "button";
+          saveButton.className =
+            "mt-2 rounded bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white";
+          saveButton.textContent = "Este é o meu ponto";
+          saveButton.addEventListener("click", () => {
+            setMyStop(stop.id);
+            saveButton.textContent = "Salvo como meu ponto ✓";
+          });
+          content.append(title, body, saveButton);
 
           L.circleMarker([stop.latitude, stop.longitude], {
             radius: 7,
@@ -212,24 +224,32 @@ export function BusMap({ lines }: { lines: LineWithStops[] }) {
   return (
     // isolate: mantém as camadas internas do Leaflet (que usam z-index alto)
     // dentro deste bloco, sem passar por cima do resto da página
-    <div className="relative isolate h-[70vh] w-full overflow-hidden rounded-lg text-slate-900">
+    <div
+      className="relative isolate w-full overflow-hidden rounded-lg text-slate-900"
+      style={{ height: "55dvh", minHeight: "20rem" }}
+    >
       <div ref={containerRef} className="h-full w-full" />
 
-      {/* Selo de status no canto superior DIREITO, pois o botão de zoom do
-          Leaflet fica no esquerdo. z-[1000] para ficar acima do mapa. */}
-      <div className="absolute right-3 top-3 z-1000 rounded-md bg-slate-900/85 px-3 py-2 text-xs text-white shadow">
-        <p className="font-semibold">{vehicles.length} veículo(s) em operação</p>
-        {updatedAt && (
-          <p className="text-slate-300">
-            Atualizado às {new Date(updatedAt).toLocaleTimeString("pt-BR")}
+      {/* Selo de status no canto superior DIREITO, pois o botão de zoom do Leaflet fica no esquerdo. z-[1000] para ficar acima do mapa. */}
+        <div className="absolute right-3 top-3 z-1000 rounded-xl border border-line bg-card/90 px-3 py-2 text-xs text-ink shadow-lg backdrop-blur">
+          <p className="flex items-center gap-2 font-semibold">
+            <span
+              aria-hidden="true"
+              className={`h-2 w-2 rounded-full ${failed ? "bg-amber-500" : "animate-pulse bg-emerald-500"}`}
+            />
+            {vehicles.length} em operação
           </p>
-        )}
-        {failed && (
-          <p className="text-amber-400">
-            Conexão instável. Mostrando a última posição conhecida.
-          </p>
-        )}
-      </div>
+          {updatedAt && (
+            <p className="mt-0.5 text-muted">
+              Atualizado às {new Date(updatedAt).toLocaleTimeString("pt-BR")}
+            </p>
+          )}
+          {failed && (
+            <p className="mt-0.5 text-amber-600">
+              Conexão instável. Mostrando a última posição.
+            </p>
+          )}
+        </div>
     </div>
   );
 }

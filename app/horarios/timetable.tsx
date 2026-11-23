@@ -39,7 +39,7 @@ export function Timetable({ lines }: { lines: TimetableLine[] }) {
 
   const line = lines.find((item) => item.code === lineCode) ?? lines[0];
   if (!line) {
-    return <p className="text-slate-400">Nenhuma linha cadastrada.</p>;
+    return <p className="text-muted">Nenhuma linha cadastrada.</p>;
   }
 
   const stop = line.stops.find((item) => item.id === stopId) ?? line.stops[0];
@@ -55,55 +55,79 @@ export function Timetable({ lines }: { lines: TimetableLine[] }) {
   const nextIndex =
     nowMinutes === null ? -1 : times.findIndex((time) => time >= nowMinutes);
 
-  let nextText: string | null = null;
+  let nextTime: string | null = null;
+  let nextWait: string | null = null;
   if (nowMinutes !== null && nextIndex >= 0) {
     const wait = Math.round(times[nextIndex] - nowMinutes);
-    nextText = `${minutesToTime(times[nextIndex])} (${wait <= 0 ? "agora" : `em ${wait} min`})`;
+    nextTime = minutesToTime(times[nextIndex]);
+    nextWait = wait <= 0 ? "agora" : `em ${wait} min`;
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex gap-2">
-        {lines.map((item) => (
-          <button
-            key={item.code}
-            onClick={() => {
-              setLineCode(item.code);
-              setStopId(null);
-            }}
-            className={`rounded px-4 py-2 text-sm font-semibold ${
-              item.code === line.code ? "text-white" : "bg-slate-800 text-slate-300"
-            }`}
-            style={
-              item.code === line.code ? { backgroundColor: item.color } : undefined
-            }
-          >
-            {item.name}
-          </button>
-        ))}
+    <div className="space-y-5">
+      {/* Linhas: abas que rolam de lado se não couberem */}
+      <div
+        role="tablist"
+        aria-label="Linha"
+        className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0"
+      >
+        {lines.map((item) => {
+          const selected = item.code === line.code;
+          return (
+            <button
+              key={item.code}
+              role="tab"
+              aria-selected={selected}
+              onClick={() => {
+                setLineCode(item.code);
+                setStopId(null);
+              }}
+              className={`min-h-11 shrink-0 rounded-full border px-4 text-sm font-semibold ${
+                selected
+                  ? "border-transparent text-white"
+                  : "border-line bg-card text-muted hover:text-ink"
+              }`}
+              style={selected ? { backgroundColor: item.color } : undefined}
+            >
+              {item.name}
+            </button>
+          );
+        })}
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      {/* Dia da semana: controle segmentado */}
+      <div
+        role="group"
+        aria-label="Dia da semana"
+        className="grid grid-cols-3 gap-1 rounded-xl bg-card-2 p-1"
+      >
         {DAYS.map((item) => (
           <button
             key={item}
             onClick={() => setChosenDay(item)}
-            className={`rounded px-3 py-1.5 text-xs font-semibold ${
-              item === day ? "bg-blue-600 text-white" : "bg-slate-800 text-slate-300"
+            aria-pressed={item === day}
+            className={`min-h-11 rounded-lg px-2 text-xs font-semibold sm:text-sm ${
+              item === day
+                ? "bg-card text-ink shadow-sm"
+                : "text-muted hover:text-ink"
             }`}
           >
             {DAY_LABELS[item]}
-            {now?.dayType === item ? " (hoje)" : ""}
+            {now?.dayType === item && (
+              <span className="block text-[11px] font-normal text-brand-ink">
+                hoje
+              </span>
+            )}
           </button>
         ))}
       </div>
 
-      <label className="block text-sm text-slate-300">
+      <label className="block text-sm font-semibold">
         Ponto
         <select
           value={stop?.id}
           onChange={(e) => setStopId(Number(e.target.value))}
-          className="mt-1 w-full rounded bg-slate-800 px-3 py-2 text-sm text-white"
+          className="mt-1 min-h-12 w-full rounded-xl border border-line bg-card px-3 text-base font-normal text-ink"
         >
           {line.stops.map((item) => (
             <option key={item.id} value={item.id}>
@@ -113,32 +137,43 @@ export function Timetable({ lines }: { lines: TimetableLine[] }) {
         </select>
       </label>
 
-      <div className="rounded-lg bg-slate-800 p-4">
+      <section
+        aria-live="polite"
+        className="rounded-2xl border border-line bg-card p-4 sm:p-5"
+      >
         {times.length === 0 ? (
-          <p className="text-slate-300">Sem circulação neste dia.</p>
+          <p className="text-muted">Sem circulação neste dia.</p>
         ) : (
           <>
-            {nextText && (
-              <p className="mb-3 text-lg">
-                Próximo ônibus: <strong>{nextText}</strong>
-              </p>
+            {nextTime && (
+              <div className="mb-4 flex items-end justify-between gap-3 rounded-xl bg-card-2 p-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+                    Próximo ônibus
+                  </p>
+                  <p className="mt-1 text-4xl font-extrabold leading-none tabular-nums text-brand-ink">
+                    {nextTime}
+                  </p>
+                </div>
+                <p className="text-sm font-semibold">{nextWait}</p>
+              </div>
             )}
             {nowMinutes !== null && nextIndex === -1 && (
-              <p className="mb-3 text-slate-300">
+              <p className="mb-4 rounded-xl bg-card-2 p-4 text-sm text-muted">
                 Acabaram os horários de hoje neste ponto.
               </p>
             )}
 
-            <ul className="grid grid-cols-4 gap-2 text-center text-sm">
+            <ul className="grid grid-cols-4 gap-2 text-center text-sm sm:grid-cols-6 md:grid-cols-8">
               {times.map((time, index) => (
                 <li
                   key={`${time}-${index}`}
-                  className={`rounded px-2 py-2 ${
+                  className={`rounded-lg px-1 py-2.5 tabular-nums ${
                     index === nextIndex
-                      ? "bg-blue-600 font-bold text-white"
+                      ? "bg-brand font-bold text-white"
                       : nowMinutes !== null && time < nowMinutes
-                        ? "bg-slate-900 text-slate-500"
-                        : "bg-slate-900 text-slate-200"
+                        ? "bg-card-2 text-muted opacity-60"
+                        : "bg-card-2 font-medium"
                   }`}
                 >
                   {minutesToTime(time)}
@@ -147,9 +182,9 @@ export function Timetable({ lines }: { lines: TimetableLine[] }) {
             </ul>
           </>
         )}
-      </div>
+      </section>
 
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-muted">
         Horários previstos; podem variar com o trânsito. Em feriados os
         horários podem mudar: confirme com a Prefeitura.
       </p>

@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
-import { NoticeBanner } from "@/components/notice-banner";
-import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
+import { AppShell } from "@/components/app-shell";
 import { getSettings } from "@/lib/settings";
 
 export const metadata: Metadata = { title: "Sobre" };
@@ -23,7 +21,7 @@ export default async function AboutPage() {
       content: (
         <a
           href={`tel:${settings.contactPhone.replace(/[^\d+]/g, "")}`}
-          className="underline"
+          className="font-medium text-brand-ink underline"
         >
           {settings.contactPhone}
         </a>
@@ -34,7 +32,10 @@ export default async function AboutPage() {
     contacts.push({
       label: "E-mail",
       content: (
-        <a href={`mailto:${settings.contactEmail}`} className="underline">
+        <a
+          href={`mailto:${settings.contactEmail}`}
+          className="font-medium text-brand-ink underline"
+        >
           {settings.contactEmail}
         </a>
       ),
@@ -48,7 +49,7 @@ export default async function AboutPage() {
           href={settings.contactSite}
           target="_blank"
           rel="noopener noreferrer"
-          className="underline"
+          className="font-medium text-brand-ink underline"
         >
           {settings.contactSite}
         </a>
@@ -63,42 +64,39 @@ export default async function AboutPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-900 p-4 text-white sm:p-8">
-      <SiteHeader />
-      <NoticeBanner />
+    <AppShell>
+      <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6">
+        <h1 className="text-2xl font-bold">Sobre o serviço</h1>
 
-      <h1 className="mb-4 text-2xl font-bold">Sobre o serviço</h1>
-
-      <div className="max-w-2xl space-y-3 text-slate-200">
-        {paragraphs.length > 0 ? (
-          paragraphs.map((paragraph, index) => (
-            <p key={index} className="whitespace-pre-line">
-              {paragraph}
+        <div className="mt-4 space-y-3 leading-relaxed">
+          {paragraphs.length > 0 ? (
+            paragraphs.map((paragraph, index) => (
+              <p key={index} className="whitespace-pre-line">
+                {paragraph}
+              </p>
+            ))
+          ) : (
+            <p>
+              Acompanhe os horários e a posição dos ônibus em tempo real,
+              direto no celular.
             </p>
-          ))
-        ) : (
-          <p>
-            Acompanhe os horários e a posição dos ônibus em tempo real, direto
-            no celular.
-          </p>
+          )}
+        </div>
+
+        {contacts.length > 0 && (
+          <section className="mt-8 rounded-2xl border border-line bg-card p-5">
+            <h2 className="mb-3 text-lg font-bold">Contato</h2>
+            <dl className="space-y-3 text-sm">
+              {contacts.map((contact) => (
+                <div key={contact.label} className="flex flex-wrap gap-x-3">
+                  <dt className="w-28 shrink-0 text-muted">{contact.label}</dt>
+                  <dd className="min-w-0 wrap-break-word">{contact.content}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
         )}
       </div>
-
-      {contacts.length > 0 && (
-        <section className="mt-6 max-w-2xl rounded-lg bg-slate-800 p-4">
-          <h2 className="mb-3 text-lg font-semibold">Contato</h2>
-          <dl className="space-y-2 text-sm">
-            {contacts.map((contact) => (
-              <div key={contact.label} className="flex flex-wrap gap-x-3">
-                <dt className="w-28 shrink-0 text-slate-400">{contact.label}</dt>
-                <dd className="min-w-0 wrap-break-word">{contact.content}</dd>
-              </div>
-            ))}
-          </dl>
-        </section>
-      )}
-
-      <SiteFooter />
-    </main>
+    </AppShell>
   );
 }

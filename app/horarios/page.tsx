@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { NoticeBanner } from "@/components/notice-banner";
-import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
+import { AppShell } from "@/components/app-shell";
 import { getTimetables } from "@/lib/timetable";
 import { Timetable } from "./timetable";
 
@@ -19,19 +17,27 @@ async function TimetableSection() {
 
 export default function HorariosPage() {
   return (
-    <main className="min-h-screen bg-slate-900 p-4 text-white sm:p-8">
-      <SiteHeader />
-      <NoticeBanner />
+    <AppShell>
+      <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6">
+        <h1 className="text-2xl font-bold">Horários</h1>
+        <p className="mt-1 text-sm text-muted">
+          Escolha a linha, o dia e o ponto onde você espera.
+        </p>
 
-      <h1 className="mb-4 text-2xl font-bold">Horários</h1>
-
-      <Suspense
-        fallback={<div className="h-64 animate-pulse rounded-lg bg-slate-800" />}
-      >
-        <TimetableSection />
-      </Suspense>
-
-      <SiteFooter />
-    </main>
+        <div className="mt-5">
+          <Suspense
+            fallback={
+              <div className="space-y-3" aria-hidden="true">
+                <div className="h-12 animate-pulse rounded-xl bg-card-2" />
+                <div className="h-12 animate-pulse rounded-xl bg-card-2" />
+                <div className="h-64 animate-pulse rounded-2xl bg-card-2" />
+              </div>
+            }
+          >
+            <TimetableSection />
+          </Suspense>
+        </div>
+      </div>
+    </AppShell>
   );
 }
