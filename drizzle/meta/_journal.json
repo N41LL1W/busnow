@@ -78,6 +78,13 @@
       "when": 1795442988026,
       "tag": "0010_fix_notices_settings_types",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1795524225369,
+      "tag": "0011_sudden_randall",
+      "breakpoints": true
     }
   ]
 }

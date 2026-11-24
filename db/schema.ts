@@ -6,6 +6,7 @@ import {
   integer,
   boolean,
   time,
+  date,
   timestamp,
   doublePrecision,
   jsonb,
@@ -77,6 +78,15 @@ export const schedules = pgTable("schedules", {
   direction: integer("direction").notNull().default(0),
   dayType: dayType("day_type").notNull(),
   departureTime: time("departure_time").notNull(),
+});
+
+// Feriados: nesses dias valem os horários de outro tipo de dia
+// (normalmente domingo). A data é sempre única.
+export const holidays = pgTable("holidays", {
+  id: serial("id").primaryKey(),
+  date: date("date", { mode: "string" }).notNull().unique(), // "2026-11-20"
+  name: text("name").notNull(),
+  treatAs: dayType("treat_as").notNull().default("sunday"),
 });
 
 // Veículos da frota

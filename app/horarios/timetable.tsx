@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getSaoPauloNow, minutesToTime, type DayType } from "@/lib/time";
+import type { HolidayInfo } from "@/lib/holidays";
+import {
+  getSaoPauloDateKey,
+  getSaoPauloNow,
+  minutesToTime,
+  type DayType,
+} from "@/lib/time";
 import type { TimetableLine } from "@/lib/timetable";
 
 const DAY_LABELS: Record<DayType, string> = {
@@ -12,20 +18,37 @@ const DAY_LABELS: Record<DayType, string> = {
 
 const DAYS: DayType[] = ["weekday", "saturday", "sunday"];
 
-export function Timetable({ lines }: { lines: TimetableLine[] }) {
+export function Timetable({
+  lines,
+  holidays,
+}: {
+  lines: TimetableLine[];
+  holidays: HolidayInfo[];
+}) {
   const [lineCode, setLineCode] = useState(lines[0]?.code);
   const [stopId, setStopId] = useState<number | null>(null);
   const [chosenDay, setChosenDay] = useState<DayType | null>(null);
-  const [now, setNow] = useState<{ dayType: DayType; minutes: number } | null>(
-    null
-  );
+  const [now, setNow] = useState<{
+    dayType: DayType;
+    minutes: number;
+    holiday: string | null; // nome do feriado de hoje, se for feriado
+  } | null>(null);
 
   // O horário só é lido no navegador (no servidor seria outro fuso e outro
   // momento), e atualizado a cada 30 segundos
   useEffect(() => {
     function tick() {
-      const { dayType, secondsOfDay } = getSaoPauloNow();
-      setNow({ dayType, minutes: secondsOfDay / 60 });
+      // Feriado cadastrado: vale o tipo de dia dele (normalmente domingo)
+      const holidayMap = Object.fromEntries(
+        holidays.map((item) => [item.date, item.treatAs])
+      );
+      const { dayType, secondsOfDay } = getSaoPauloNow(new Date(), holidayMap);
+      const today = holidays.find((item) => item.date === getSaoPauloDateKey());
+      setNow({
+        dayType,
+        minutes: secondsOfDay / 60,
+        holiday: today?.name ?? null,
+      });
     }
 
     const first = window.setTimeout(tick, 0);
@@ -35,7 +58,7 @@ export function Timetable({ lines }: { lines: TimetableLine[] }) {
       window.clearTimeout(first);
       window.clearInterval(timer);
     };
-  }, []);
+  }, [holidays]);
 
   const line = lines.find((item) => item.code === lineCode) ?? lines[0];
   if (!line) {
@@ -65,6 +88,12 @@ export function Timetable({ lines }: { lines: TimetableLine[] }) {
 
   return (
     <div className="space-y-5">
+      {now?.holiday && (
+        <p role="status" className="notice notice-info rounded-xl px-4 py-3 text-sm">
+          Hoje é feriado ({now.holiday}). Valem os horários de{" "}
+          {DAY_LABELS[now.dayType].toLowerCase()}.
+        </p>
+      )}
       {/* Linhas: abas que rolam de lado se não couberem */}
       <div
         role="tablist"

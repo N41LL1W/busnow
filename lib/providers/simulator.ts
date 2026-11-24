@@ -3,9 +3,15 @@ import { db } from "@/db";
 import { vehicles } from "@/db/schema";
 import { buildRoute, distanceAtMinutes } from "@/lib/eta";
 import { pointAlongPath } from "@/lib/geo";
+import { getHolidayMap } from "@/lib/holidays";
 import { getDepartures, getLinesWithStops } from "@/lib/queries";
 import type { VehiclePosition } from "@/lib/schemas";
-import { getSaoPauloNow, timeToMinutes, type DayType } from "@/lib/time";
+import {
+  getSaoPauloNow,
+  timeToMinutes,
+  type DayType,
+  type HolidayMap,
+} from "@/lib/time";
 
 // Só usada quando a linha ainda não tem a duração da volta (tripMinutes)
 const FALLBACK_SPEED_KMH = 25;
@@ -17,7 +23,7 @@ const LAYOVER_MINUTES = 5;
 let simStartMs: number | null = null;
 
 // Que dia e que hora (em minutos desde a meia-noite) a simulação considera
-function readClock(nowMs: number): { dayType: DayType; minutes: number } {
+function readClock(nowMs: number, holidays: HolidayMap): { dayType: DayType; minutes: number } {
   // Só em desenvolvimento: SIM_AT="09:30" faz o relógio da simulação começar
   // nesse horário e andar normalmente a partir dali. SIM_DAY escolhe o dia
   // ("weekday", "saturday" ou "sunday"; o padrão é dia útil).
@@ -35,12 +41,12 @@ function readClock(nowMs: number): { dayType: DayType; minutes: number } {
     };
   }
 
-  const { dayType, secondsOfDay } = getSaoPauloNow(new Date(nowMs));
+  const { dayType, secondsOfDay } = getSaoPauloNow(new Date(nowMs), holidays);
   return { dayType, minutes: secondsOfDay / 60 };
 }
 
 export async function getSimulatedPositions(): Promise<VehiclePosition[]> {
-  const [fleet, allLines, allDepartures] = await Promise.all([
+  const [fleet, allLines, allDepartures, holidays] = await Promise.all([
     db
       .select({ externalId: vehicles.externalId, lineId: vehicles.lineId })
       .from(vehicles)
@@ -48,10 +54,11 @@ export async function getSimulatedPositions(): Promise<VehiclePosition[]> {
       .orderBy(asc(vehicles.id)),
     getLinesWithStops(),
     getDepartures(),
+    getHolidayMap(),
   ]);
 
   const nowMs = Date.now();
-  const clock = readClock(nowMs);
+  const clock = readClock(nowMs, holidays);
   const timestamp = new Date(nowMs).toISOString();
   const positions: VehiclePosition[] = [];
 

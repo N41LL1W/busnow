@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { AppShell } from "@/components/app-shell";
 import { getTimetables } from "@/lib/timetable";
 import { Timetable } from "./timetable";
+import { getHolidays } from "@/lib/holidays";
 
 export const metadata: Metadata = {
   title: "Horários",
@@ -11,8 +12,8 @@ export const metadata: Metadata = {
 
 // Componente de SERVIDOR: busca no banco e entrega os dados à tela
 async function TimetableSection() {
-  const lines = await getTimetables();
-  return <Timetable lines={lines} />;
+  const [lines, holidays] = await Promise.all([getTimetables(), getHolidays()]);
+  return <Timetable lines={lines} holidays={holidays} />;
 }
 
 export default function HorariosPage() {

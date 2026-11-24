@@ -13,6 +13,7 @@
     "db:seed": "tsx db/seed.ts",
     "check:eta": "tsx scripts/check-eta.ts",
     "check:timetable": "tsx scripts/check-timetable.ts",
+    "check:holidays": "tsx scripts/check-holidays.ts",
     "geocode": "tsx scripts/geocode.ts",
     "admin": "tsx scripts/admin.ts"
   },
