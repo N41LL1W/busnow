@@ -22,6 +22,9 @@ async function AdminBar() {
       <Link href="/admin/linhas" className="text-blue-300">
         Linhas
       </Link>
+      <Link href="/admin/horarios" className="text-blue-300">
+        Horários
+      </Link>
       <Link href="/admin/aparencia" className="text-blue-300">
         Aparência
       </Link>
