@@ -7,6 +7,7 @@ import { db } from "@/db";
 import { notices } from "@/db/settings-schema";
 import { requireAdmin } from "@/lib/admin-guard";
 import type { FormState } from "../form-state";
+import { recordAudit } from "@/lib/audit";
 
 // O campo datetime-local manda "2026-11-20T08:30", sem fuso. O app atende
 // cidades de SP (UTC-3, sem horário de verão desde 2019): lemos assim.
@@ -29,7 +30,7 @@ export async function createNoticeAction(
   _previous: FormState,
   formData: FormData
 ): Promise<FormState> {
-  await requireAdmin();
+    const admin = await requireAdmin();
 
   const parsed = schema.safeParse({
     message: String(formData.get("message") ?? ""),
@@ -54,27 +55,46 @@ export async function createNoticeAction(
 
   await db.insert(notices).values({ ...parsed.data, startsAt, endsAt });
   updateTag("notices");
+  await recordAudit(admin, "notice.create", `Aviso criado: "${parsed.data.message}"`, {
+    severity: parsed.data.severity,
+    startsAt: startsAt.toISOString(),
+    endsAt: endsAt?.toISOString() ?? null,
+  });
   return { ok: true };
 }
 
 // Liga/desliga um aviso sem apagar
 export async function toggleNoticeAction(formData: FormData) {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const id = Number(formData.get("id"));
   if (!Number.isInteger(id) || id <= 0) return;
 
-  await db
+  const [changed] = await db
     .update(notices)
     .set({ active: not(notices.active) })
-    .where(eq(notices.id, id));
+    .where(eq(notices.id, id))
+    .returning({ message: notices.message, active: notices.active });
   updateTag("notices");
+  if (changed) {
+    await recordAudit(
+      admin,
+      "notice.toggle",
+      `Aviso ${changed.active ? "ativado" : "desativado"}: "${changed.message}"`
+    );
+  }
 }
 
 export async function deleteNoticeAction(formData: FormData) {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const id = Number(formData.get("id"));
   if (!Number.isInteger(id) || id <= 0) return;
 
-  await db.delete(notices).where(eq(notices.id, id));
+  const [removed] = await db
+    .delete(notices)
+    .where(eq(notices.id, id))
+    .returning({ message: notices.message });
   updateTag("notices");
+  if (removed) {
+    await recordAudit(admin, "notice.delete", `Aviso excluído: "${removed.message}"`);
+  }
 }

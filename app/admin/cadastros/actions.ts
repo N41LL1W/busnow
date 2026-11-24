@@ -7,6 +7,7 @@ import { lines, lineStops, stops, vehicles } from "@/db/schema";
 import { requireAdmin } from "@/lib/admin-guard";
 import { contrastWithWhite, isHexColor, MIN_CONTRAST } from "@/lib/color";
 import type { FormState } from "../form-state";
+import { recordAudit } from "@/lib/audit";
 
 const text = (formData: FormData, name: string) =>
   String(formData.get(name) ?? "").trim();
@@ -32,7 +33,7 @@ export async function createLineAction(
   _previous: FormState,
   formData: FormData
 ): Promise<FormState> {
-  await requireAdmin();
+  const admin = await requireAdmin();
 
   const code = text(formData, "code").toUpperCase();
   const name = text(formData, "name");
@@ -56,6 +57,7 @@ export async function createLineAction(
 
   await db.insert(lines).values({ code, name, color });
   revalidatePath("/admin/cadastros");
+  await recordAudit(admin, "line.create", `Linha ${code} criada: ${name}`, { color });
   return { ok: true };
 }
 
@@ -63,7 +65,7 @@ export async function updateLineAction(
   _previous: FormState,
   formData: FormData
 ): Promise<FormState> {
-  await requireAdmin();
+  const admin = await requireAdmin();
 
   const id = toId(formData.get("id"));
   const name = text(formData, "name");
@@ -77,11 +79,21 @@ export async function updateLineAction(
   if (colorError) return { error: colorError };
 
   await db
+  const active = formData.get("active") === "on";
+  const [updated] = await db
     .update(lines)
-    .set({ name, color, active: formData.get("active") === "on" })
-    .where(eq(lines.id, id));
+    .set({ name, color, active })
+    .where(eq(lines.id, id))
+    .returning({ code: lines.code });
 
   revalidatePath("/admin/cadastros");
+  if (updated) {
+    await recordAudit(admin, "line.update", `Linha ${updated.code} atualizada`, {
+      name,
+      color,
+      active,
+    });
+  }
   return { ok: true };
 }
 
@@ -91,13 +103,20 @@ export async function deleteLineAction(
   _previous: FormState,
   formData: FormData
 ): Promise<FormState> {
-  await requireAdmin();
+  const admin = await requireAdmin();
 
   const id = toId(formData.get("id"));
   if (!id) return { error: "Linha inválida." };
   if (formData.get("confirm") !== "on") {
     return { error: "Marque a confirmação para apagar." };
   }
+
+    const [line] = await db
+    .select({ code: lines.code, name: lines.name })
+    .from(lines)
+    .where(eq(lines.id, id))
+    .limit(1);
+  if (!line) return { error: "Linha não encontrada." };
 
   // 1) apaga a linha (pontos do trajeto e horários saem junto; os veículos
   //    apenas ficam sem linha) 2) apaga as paradas que ninguém mais usa
@@ -114,6 +133,7 @@ export async function deleteLineAction(
   ]);
 
   revalidatePath("/admin/cadastros");
+  await recordAudit(admin, "line.delete", `Linha ${line.code} apagada (${line.name})`);
   return { ok: true };
 }
 
@@ -138,7 +158,7 @@ export async function createVehicleAction(
   _previous: FormState,
   formData: FormData
 ): Promise<FormState> {
-  await requireAdmin();
+  const admin = await requireAdmin();
 
   const externalId = text(formData, "externalId");
   const label = text(formData, "label");
@@ -165,6 +185,9 @@ export async function createVehicleAction(
 
   await db.insert(vehicles).values({ externalId, label, lineId: choice.lineId });
   revalidatePath("/admin/cadastros");
+  await recordAudit(admin, "vehicle.create", `Veículo ${externalId} cadastrado: ${label}`, {
+    lineId: choice.lineId,
+  });
   return { ok: true };
 }
 
@@ -172,7 +195,7 @@ export async function updateVehicleAction(
   _previous: FormState,
   formData: FormData
 ): Promise<FormState> {
-  await requireAdmin();
+  const admin = await requireAdmin();
 
   const id = toId(formData.get("id"));
   const label = text(formData, "label");
@@ -185,19 +208,39 @@ export async function updateVehicleAction(
   if ("error" in choice) return choice;
 
   await db
+  const active = formData.get("active") === "on";
+  const [updated] = await db
     .update(vehicles)
-    .set({ label, lineId: choice.lineId, active: formData.get("active") === "on" })
-    .where(eq(vehicles.id, id));
+    .set({ label, lineId: choice.lineId, active })
+    .where(eq(vehicles.id, id))
+    .returning({ externalId: vehicles.externalId });
 
   revalidatePath("/admin/cadastros");
+  if (updated) {
+    await recordAudit(admin, "vehicle.update", `Veículo ${updated.externalId} atualizado`, {
+      label,
+      lineId: choice.lineId,
+      active,
+    });
+  }
   return { ok: true };
 }
 
 export async function deleteVehicleAction(formData: FormData) {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const id = toId(formData.get("id"));
   if (!id) return;
 
-  await db.delete(vehicles).where(eq(vehicles.id, id));
+  const [removed] = await db
+    .delete(vehicles)
+    .where(eq(vehicles.id, id))
+    .returning({ externalId: vehicles.externalId, label: vehicles.label });
   revalidatePath("/admin/cadastros");
+  if (removed) {
+    await recordAudit(
+      admin,
+      "vehicle.delete",
+      `Veículo ${removed.externalId} excluído (${removed.label})`
+    );
+  }
 }

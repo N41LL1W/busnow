@@ -3,7 +3,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/db";
 import { lines, lineStops, stops } from "@/db/schema";
-import { requireAdminApi } from "@/lib/auth";
+import { getCurrentAdmin, requireAdminApi } from "@/lib/auth";
+import { recordAudit } from "@/lib/audit";
 
 // Só aceita posições dentro da região de Brodowski (barra erro de clique)
 const latitude = z.number().min(-21.09).max(-20.89);
@@ -196,16 +197,38 @@ export async function POST(request: Request) {
   const input = parsed.data;
 
   try {
+    let response: NextResponse;
     switch (input.action) {
       case "addNode":
-        return await addNode(input);
+        response = await addNode(input);
+        break;
       case "updateNode":
-        return await updateNode(input);
+        response = await updateNode(input);
+        break;
       case "deleteNode":
-        return await deleteNode(input);
+        response = await deleteNode(input);
+        break;
       case "reorder":
-        return await reorder(input);
+        response = await reorder(input);
+        break;
     }
+
+    // Só registra o que deu certo
+    const admin = await getCurrentAdmin();
+    if (admin && response.ok) {
+      const summaries = {
+        addNode: input.action === "addNode" && input.kind === "waypoint"
+          ? "Trajeto: curva adicionada"
+          : "Trajeto: ponto adicionado",
+        updateNode: "Trajeto: ponto alterado",
+        deleteNode: "Trajeto: ponto removido",
+        reorder: "Trajeto: ordem dos pontos alterada",
+      } as const;
+      await recordAudit(admin, "route.node", summaries[input.action], {
+        ...input,
+      });
+    }
+    return response;
   } catch (error) {
     console.error("Erro no painel:", error);
     return fail("Erro ao salvar no banco.", 500);

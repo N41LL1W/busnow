@@ -8,6 +8,7 @@ export default defineConfig({
     "./db/schema.ts",
     "./db/auth-schema.ts",
     "./db/settings-schema.ts",
+    "./db/audit-schema.ts",
   ],
   out: "./drizzle",
   dialect: "postgresql",

@@ -8,6 +8,7 @@ import { siteSettings } from "@/db/settings-schema";
 import { requireAdmin } from "@/lib/admin-guard";
 import { contrastWithWhite, isHexColor, MIN_CONTRAST } from "@/lib/color";
 import type { FormState } from "../form-state";
+import { recordAudit } from "@/lib/audit";
 
 const MAX_LOGO_BYTES = 300 * 1024;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -95,7 +96,7 @@ export async function saveSettingsAction(
   _previous: FormState,
   formData: FormData
 ): Promise<FormState> {
-  await requireAdmin();
+  const admin = await requireAdmin();
 
   const raw = Object.fromEntries(
     FIELD_NAMES.map((name) => [name, String(formData.get(name) ?? "")])
@@ -167,6 +168,12 @@ export async function saveSettingsAction(
 
   // Faz o app público mostrar a mudança na hora
   updateTag("settings");
+
+  await recordAudit(admin, "appearance.save", "Aparência e informações do serviço atualizadas", {
+    serviceName: data.serviceName,
+    primaryColor: data.primaryColor,
+    logo: logoPatch ? (logoPatch.logoBase64 ? "novo logotipo" : "logotipo removido") : "mantido",
+  });
 
   return { ok: true };
 }

@@ -7,6 +7,7 @@ import { holidays } from "@/db/schema";
 import { requireAdmin } from "@/lib/admin-guard";
 import { nationalHolidays } from "@/lib/national-holidays";
 import type { FormState } from "../form-state";
+import { recordAudit } from "@/lib/audit";
 
 // "2026-11-20" existe de verdade? (barra "2026-02-30")
 function isRealDate(value: string): boolean {
@@ -25,7 +26,7 @@ export async function createHolidayAction(
   _previous: FormState,
   formData: FormData
 ): Promise<FormState> {
-  await requireAdmin();
+  const admin = await requireAdmin();
 
   const date = String(formData.get("date") ?? "");
   const name = String(formData.get("name") ?? "").trim();
@@ -50,16 +51,31 @@ export async function createHolidayAction(
 
   await db.insert(holidays).values({ date, name, treatAs });
   revalidatePath("/admin/feriados");
+  await recordAudit(
+    admin,
+    "holiday.create",
+    `Feriado cadastrado: ${name} (${date.split("-").reverse().join("/")})`,
+    { date, treatAs }
+  );
   return { ok: true };
 }
-
 export async function deleteHolidayAction(formData: FormData) {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const id = Number(formData.get("id"));
   if (!Number.isInteger(id) || id <= 0) return;
 
-  await db.delete(holidays).where(eq(holidays.id, id));
+  const [removed] = await db
+    .delete(holidays)
+    .where(eq(holidays.id, id))
+    .returning({ name: holidays.name, date: holidays.date });
   revalidatePath("/admin/feriados");
+  if (removed) {
+    await recordAudit(
+      admin,
+      "holiday.delete",
+      `Feriado excluído: ${removed.name} (${removed.date.split("-").reverse().join("/")})`
+    );
+  }
 }
 
 // Cadastra os feriados nacionais do ano; os que já existem ficam como estão
@@ -67,7 +83,7 @@ export async function importNationalAction(
   _previous: FormState,
   formData: FormData
 ): Promise<FormState> {
-  await requireAdmin();
+  const admin = await requireAdmin();
 
   const year = Number(formData.get("year"));
   if (!Number.isInteger(year) || year < 2020 || year > 2100) {
@@ -87,7 +103,11 @@ export async function importNationalAction(
     .returning({ id: holidays.id });
 
   revalidatePath("/admin/feriados");
+  if (inserted.length > 0) {
+    await recordAudit(
+      admin,
+      "holiday.import",
+      `Feriados nacionais de ${year} cadastrados (${inserted.length})`
+    );
+  }
   return inserted.length === 0
-    ? { error: `Os feriados nacionais de ${year} já estavam cadastrados.` }
-    : { ok: true };
-}

@@ -3,7 +3,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/db";
 import { lines, lineStops, stops } from "@/db/schema";
-import { requireAdminApi } from "@/lib/auth";
+import { getCurrentAdmin, requireAdminApi } from "@/lib/auth";
+import { recordAudit } from "@/lib/audit";
 import { bearingDegrees, distanceMeters } from "@/lib/geo";
 import { nodesHash, routeThrough } from "@/lib/routing";
 
@@ -131,6 +132,15 @@ export async function POST(request: Request) {
         geometryHash: nodesHash(nodes),
       })
       .where(eq(lines.id, lineId));
+
+    const admin = await getCurrentAdmin();
+    if (admin) {
+      await recordAudit(admin, "route.geometry", `Traçado pelas ruas gerado (linha ${lineId})`, {
+        lineId,
+        points: result.geometry.length,
+        warnings: warnings.length,
+      });
+    }
 
     return NextResponse.json({
       points: result.geometry.length,

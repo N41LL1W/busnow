@@ -13,6 +13,7 @@ import {
 } from "@/lib/auth";
 import { hashPassword, verifyPassword } from "@/lib/password";
 import type { FormState } from "./form-state";
+import { recordAudit } from "@/lib/audit";
 
 const MAX_LENGTH = 200; // senhas gigantes só serviriam para sobrecarregar o servidor
 
@@ -34,11 +35,14 @@ export async function loginAction(
     };
   }
 
+  await recordAudit(admin, "access.login", "Entrou no painel");
   redirect("/admin/linhas");
 }
 
 export async function logoutAction() {
+  const admin = await getCurrentAdmin();
   await destroySession();
+  if (admin) await recordAudit(admin, "access.logout", "Saiu do painel");
   redirect("/admin/login");
 }
 
@@ -82,5 +86,6 @@ export async function changePasswordAction(
   await deleteAllSessions(admin.id);
   await createSession(admin.id);
 
+  await recordAudit(admin, "access.password", "Senha alterada (outros acessos foram encerrados)");
   return { ok: true };
 }

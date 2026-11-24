@@ -6,6 +6,7 @@ import { db } from "@/db";
 import { lines, lineStops, schedules, stops } from "@/db/schema";
 import { requireAdmin } from "@/lib/admin-guard";
 import type { FormState } from "../form-state";
+import { recordAudit } from "@/lib/audit";
 
 const DAYS = [
   { key: "weekday", label: "Segunda a sexta" },
@@ -42,13 +43,13 @@ export async function saveDeparturesAction(
   _previous: FormState,
   formData: FormData
 ): Promise<FormState> {
-  await requireAdmin();
+  const admin = await requireAdmin();
 
   const lineId = parseLineId(formData);
   if (!lineId) return { error: "Linha inválida." };
 
   const [line] = await db
-    .select({ id: lines.id })
+    .select({ id: lines.id, code: lines.code })
     .from(lines)
     .where(eq(lines.id, lineId))
     .limit(1);
@@ -83,6 +84,11 @@ export async function saveDeparturesAction(
   }
 
   revalidatePath("/admin/horarios");
+  await recordAudit(admin, "schedule.departures", `Linha ${line.code}: horários de saída atualizados`, {
+    segundaASexta: rows.filter((row) => row.dayType === "weekday").length,
+    sabado: rows.filter((row) => row.dayType === "saturday").length,
+    domingo: rows.filter((row) => row.dayType === "sunday").length,
+  });
   return { ok: true };
 }
 
@@ -90,7 +96,7 @@ export async function saveMinutesAction(
   _previous: FormState,
   formData: FormData
 ): Promise<FormState> {
-  await requireAdmin();
+  const admin = await requireAdmin();
 
   const lineId = parseLineId(formData);
   if (!lineId) return { error: "Linha inválida." };
@@ -150,5 +156,11 @@ export async function saveMinutesAction(
   ]);
 
   revalidatePath("/admin/horarios");
+  await recordAudit(
+    admin,
+    "schedule.minutes",
+    `Linha ${line.code}: minutos das paradas e duração da volta atualizados`,
+    { tripMinutes: trip, minutosPorParada: minutes }
+  );
   return { ok: true };
 }
