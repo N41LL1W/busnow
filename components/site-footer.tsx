@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getSettings } from "@/lib/settings";
 
 export async function SiteFooter() {
@@ -32,7 +33,14 @@ export async function SiteFooter() {
         </p>
       )}
 
-      {settings.showPoweredBy && <p className="mt-1">Tecnologia BusNow</p>}
+      {settings.showPoweredBy && (
+        <p className="mt-1">
+          Tecnologia{" "}
+          <Link href="/prefeituras" className="underline">
+            BusNow
+          </Link>
+        </p>
+      )}
     </footer>
   );
 }
