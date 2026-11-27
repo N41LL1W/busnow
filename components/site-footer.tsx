@@ -33,6 +33,16 @@ export async function SiteFooter() {
         </p>
       )}
 
+      <p className="mt-1">
+        <Link href="/termos" className="underline">
+          Termos de uso
+        </Link>
+        {" · "}
+        <Link href="/privacidade" className="underline">
+          Privacidade
+        </Link>
+      </p>
+
       {settings.showPoweredBy && (
         <p className="mt-1">
           Tecnologia{" "}
